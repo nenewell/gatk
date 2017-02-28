@@ -29,6 +29,7 @@ class AlignmentRegion {
 
     static final String STRING_REP_SEPARATOR= "\t";
     static final String PACKED_STRING_REP_SEPARATOR= "_";
+    static final char ASSEMBLY_CONTIG_SEPARATOR = ':';
     static final String DUMMY_ASM_ID = "ASSEMBLY";
 
     final String assemblyId;
@@ -80,8 +81,15 @@ class AlignmentRegion {
     }
 
     public AlignmentRegion(final GATKRead read) {
-        this.assemblyId = DUMMY_ASM_ID;
-        this.contigId = read.getName();
+        final String readName = read.getName();
+        final int splitPos = readName.indexOf(ASSEMBLY_CONTIG_SEPARATOR);
+        if ( splitPos == -1 ) {
+            this.assemblyId = DUMMY_ASM_ID;
+            this.contigId = readName;
+        } else {
+            this.assemblyId = readName.substring(0, splitPos);
+            this.contigId = readName.substring(splitPos+1);
+        }
         this.referenceInterval = new SimpleInterval(read);
         this.forwardStrand = ! read.isReverseStrand();
         this.cigarAlong5to3DirectionOfContig = forwardStrand ? read.getCigar() : CigarUtils.invertCigar(read.getCigar());

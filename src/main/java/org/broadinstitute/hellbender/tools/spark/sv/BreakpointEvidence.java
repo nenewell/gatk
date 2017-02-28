@@ -41,12 +41,16 @@ public class BreakpointEvidence implements Comparable<BreakpointEvidence> {
      */
     protected BreakpointEvidence( final GATKRead read, final ReadMetadata metadata ) {
         final int templateLen = metadata.getStatistics(read.getReadGroup()).getMedianFragmentSize();
-        final int width;
-        final int start;
+        int width;
+        int start;
         if ( read.isReverseStrand() ) {
             final int readStart = read.getStart();
             width = readStart - (read.getUnclippedEnd() + 1 - templateLen);
             start = readStart - width;
+            if ( start < 1 ) {
+                width += start - 1;
+                start = 1;
+            }
         } else {
             final int readEnd = read.getEnd() + 1;
             width = read.getUnclippedStart() + templateLen - readEnd;
