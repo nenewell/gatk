@@ -73,8 +73,14 @@ public class BreakpointEvidence implements Comparable<BreakpointEvidence> {
         this.templateName = read.getName();
         if ( templateName == null ) throw new GATKException("Read has no name.");
         this.templateEnd = findTemplateEnd(read);
-        this.eventStartPosition = contigOffset - offsetUncertainty;
-        this.eventWidth = 2*offsetUncertainty;
+        int width = 2*offsetUncertainty;
+        int start = contigOffset - offsetUncertainty;
+        if ( start < 1 ) {
+            width += start - 1;
+            start = 1;
+        }
+        this.eventStartPosition = start;
+        this.eventWidth = width;
     }
 
     /**

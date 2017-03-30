@@ -60,8 +60,13 @@ class AlignmentRegion {
         this.mapQual = alignment.getMapQual();
         this.mismatches = alignment.getNMismatches();
         this.assembledContigLength = contigLen;
-        this.startInAssembledContig = alignment.getSeqStart()+1;
-        this.endInAssembledContig = alignment.getSeqEnd();
+        if ( forwardStrand ) {
+            this.startInAssembledContig = alignment.getSeqStart() + 1;
+            this.endInAssembledContig = alignment.getSeqEnd();
+        } else {
+            this.startInAssembledContig = contigLen - alignment.getSeqEnd() + 1;
+            this.endInAssembledContig = contigLen - alignment.getSeqStart();
+        }
     }
 
     @VisibleForTesting
