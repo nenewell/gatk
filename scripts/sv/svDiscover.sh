@@ -39,10 +39,8 @@ export REF_FASTA
 export REF_2BIT
 export REF_INDEX_IMG
 
+cd $(dirname -- "$0")
 ./scanBam.sh "$@"
-
 ./assembly.sh
-
 ./alignAssembly.sh
-
 ./discoverVariants.sh

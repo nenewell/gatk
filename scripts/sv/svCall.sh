@@ -21,5 +21,6 @@ if [[ "$#" -lt 6 ]]; then
     exit 1
 fi
 
+cd $(dirname -- $"0")
 ./scanBam.sh "$@"
 ./callVariants.sh "$1" "$2" "$3" "$5"
