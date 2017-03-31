@@ -18,7 +18,7 @@ import org.broadinstitute.hellbender.engine.spark.GATKSparkTool;
 import org.broadinstitute.hellbender.utils.read.GATKRead;
 import scala.Tuple2;
 
-import static org.broadinstitute.hellbender.tools.spark.sv.CallVariantsFromAlignedContigsSpark.*;
+import static org.broadinstitute.hellbender.tools.spark.sv.DiscoverStructuralVariantsFromAlignedContigsSpark.*;
 
 /**
  * This tool takes a SAM file containing the alignments of assembled contigs or long reads to the reference
@@ -30,7 +30,7 @@ import static org.broadinstitute.hellbender.tools.spark.sv.CallVariantsFromAlign
 @CommandLineProgramProperties(summary="Parse a SAM file containing contigs or long reads aligned to the reference, and call SVs",
         oneLineSummary="Parse a SAM file containing contigs or long reads aligned to the reference, and call SVs",
         programGroup = SparkProgramGroup.class)
-public final class CallVariantsFromAlignedContigsSAMSpark extends GATKSparkTool {
+public final class DiscoverStructuralVariantsFromAlignedContigsSAMSpark extends GATKSparkTool {
     private static final long serialVersionUID = 1L;
 
     @Argument(doc = "URL of the output path", shortName = "outputPath",
@@ -71,7 +71,7 @@ public final class CallVariantsFromAlignedContigsSAMSpark extends GATKSparkTool 
         final PipelineOptions pipelineOptions = getAuthenticatedGCSOptions();
         final SAMSequenceDictionary referenceSequenceDictionary = new ReferenceMultiSource(pipelineOptions, fastaReference, ReferenceWindowFunctions.IDENTITY_FUNCTION).getReferenceSequenceDictionary(null);
 
-        final JavaRDD<VariantContext> variants = callVariantsFromAlignmentRegions(ctx.broadcast(getReference()), alignmentRegionsIterable, LogManager.getLogger(CallVariantsFromAlignedContigsSAMSpark.class));
+        final JavaRDD<VariantContext> variants = callVariantsFromAlignmentRegions(ctx.broadcast(getReference()), alignmentRegionsIterable, LogManager.getLogger(DiscoverStructuralVariantsFromAlignedContigsSAMSpark.class));
         SVVCFWriter.writeVCF(pipelineOptions, outputPath, SVConstants.CallingStepConstants.INVERSIONS_OUTPUT_VCF, fastaReference, variants);
     }
 

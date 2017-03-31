@@ -18,9 +18,9 @@ import scala.Tuple2;
 @CommandLineProgramProperties(summary="Filter breakpoint alignments and call variants.",
         oneLineSummary="Filter breakpoint alignments and call variants",
         programGroup = StructuralVariationSparkProgramGroup.class)
-public final class CallVariantsFromAlignedContigsSpark extends GATKSparkTool {
+public final class DiscoverStructuralVariantsFromAlignedContigsSpark extends GATKSparkTool {
     private static final long serialVersionUID = 1L;
-    private static final Logger log = LogManager.getLogger(CallVariantsFromAlignedContigsSpark.class);
+    private static final Logger log = LogManager.getLogger(DiscoverStructuralVariantsFromAlignedContigsSpark.class);
 
     @Argument(doc = "URI of the output path", shortName = "outputPath",
             fullName = "outputPath", optional = false)
@@ -81,7 +81,7 @@ public final class CallVariantsFromAlignedContigsSpark extends GATKSparkTool {
                                                                     final Logger logger) {
 
         return alignmentRegionsWithContigSequence.filter(pair -> Iterables.size(pair._1())>1) // filter out any contigs that has less than two alignment records
-                .flatMap( input -> ChimericAlignment.fromSplitAlignments(input).iterator())                                                            // 1. AR -> {CA}
+                .flatMap( input -> ChimericAlignment.fromSplitAlignments(input).iterator())                                 // 1. AR -> {CA}
                 .mapToPair(ca -> new Tuple2<>(new NovelAdjacencyReferenceLocations(ca), ca))                                // 2. CA -> BP
                 .groupByKey()                                                                                               // 3. {consensus BP}
                 .map(tuple2 -> SVVariantConsensusCall.callVariantsFromConsensus(tuple2, broadcastReference));               // BP annotated with list of CA's
