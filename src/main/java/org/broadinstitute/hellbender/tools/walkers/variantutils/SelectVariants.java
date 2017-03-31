@@ -40,13 +40,10 @@ import org.broadinstitute.hellbender.utils.samples.MendelianViolation;
 import org.broadinstitute.hellbender.utils.samples.PedigreeValidationType;
 import org.broadinstitute.hellbender.utils.samples.SampleDB;
 import org.broadinstitute.hellbender.utils.samples.SampleDBBuilder;
-import org.broadinstitute.hellbender.utils.samples.SampleUtils;
 import org.broadinstitute.hellbender.utils.Utils;
-import org.broadinstitute.hellbender.utils.text.XReadLines;
 import org.broadinstitute.hellbender.utils.variant.*;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -129,7 +126,10 @@ public final class SelectVariants extends VariantWalker {
     public File outFile = null;
 
     /**
-     * This argument can be specified multiple times in order to provide multiple sample names.
+     * This argument can be specified multiple times in order to provide multiple sample names, or to specify
+     * the name of one or more files containing sample names. Files names must end in ".list", and the expected
+     * file format is simply plain text with one sample name per line. Note that sample exclusion takes
+     * precedence over inclusion, so that if a sample is in both lists it will be excluded.
      */
     @Argument(fullName="sample_name", shortName="sn", doc="Include genotypes from this sample", optional=true)
     private Set<String> sampleNames = new LinkedHashSet<>(0);
@@ -143,26 +143,13 @@ public final class SelectVariants extends VariantWalker {
     private Set<String> sampleExpressions = new LinkedHashSet<>(0);
 
     /**
-     * Sample names should be in a plain text file listing one sample name per line. This argument can be specified
-     * multiple times in order to provide multiple sample list files.
-     */
-    @Argument(fullName="sample_file", shortName="sf", doc="File containing a list of samples to include", optional=true)
-    private Set<File> sampleFiles = new LinkedHashSet<>(0);
-
-    /**
      * Note that sample exclusion takes precedence over inclusion, so that if a sample is in both lists it will be
-     * excluded. This argument can be specified multiple times in order to provide multiple sample names.
+     * excluded. This argument can be specified multiple times in order to provide multiple sample names, or to
+     * specify the name of one or more files containing sample names. File names must end in ".list", and the
+     * expected file format is simply plain text with one sample name per line.
      */
     @Argument(fullName="exclude_sample_name", shortName="xl_sn", doc="Exclude genotypes from this sample", optional=true)
     private Set<String> XLsampleNames = new LinkedHashSet<>(0);
-
-    /**
-     * Sample names should be in a plain text file listing one sample name per line. Note that sample exclusion takes
-     * precedence over inclusion, so that if a sample is in both lists it will be excluded. This argument can be
-     * specified multiple times in order to provide multiple sample list files.
-     */
-    @Argument(fullName="exclude_sample_file", shortName="xl_sf", doc="List of samples to exclude", optional=true)
-    private Set<File> XLsampleFiles = new LinkedHashSet<>(0);
 
     /**
      * Using a regular expression allows you to match multiple sample names that have that pattern in common. Note that
@@ -316,20 +303,21 @@ public final class SelectVariants extends VariantWalker {
     private List<VariantContext.Type> typesToExclude = new ArrayList<>();
 
     /**
-     * If a file containing a list of IDs is provided to this argument, the tool will only select variants whose ID
-     * field is present in this list of IDs. The matching is done by exact string matching. The expected file format
-     * is simply plain text with one ID per line.
+     * List of IDs (or a .list file containing ids) to select. The tool will only select variants whose ID
+     * field is present in this list of IDs. The matching is done by exact string matching. If a file, the file
+     * name must end in ".list", and the expected file format is simply plain text with one ID per line.
      */
     @Argument(fullName="keepIDs", shortName="IDs", doc="List of variant IDs to select", optional=true)
-    private File rsIDFile = null;
+    private Set<String> IDsToKeep = new HashSet<>();
 
     /**
-     * If a file containing a list of IDs is provided to this argument, the tool will not select variants whose ID
-     * field is present in this list of IDs. The matching is done by exact string matching. The expected file format
-     * is simply plain text with one ID per line.
+     * List of IDs (or a .list file containing ids) to exclude. The tool will exclude variants whose ID
+     * field is present in this list of IDs. The matching is done by exact string matching. If a file, the
+     * file name must end in ".list", and the expected file format is simply plain text with one ID per line.
      */
-    @Argument(fullName="excludeIDs", shortName="xlIDs", doc="List of variant IDs to select", optional=true)
-    private File XLrsIDFile = null;
+    @Argument(fullName="excludeIDs", shortName="xlIDs", doc="List of variant IDs to exlcude", optional=true)
+    private Set<String> IDsToRemove = new HashSet<>();
+
 
     @Hidden
     @Argument(fullName="fullyDecode", doc="If true, the incoming VariantContext will be fully decoded", optional=true)
@@ -434,9 +422,6 @@ public final class SelectVariants extends VariantWalker {
     // Random number generator for the genotypes to remove
     private final Random randomGenotypes = new Random();
 
-    private Set<String> IDsToKeep = null;
-    private Set<String> IDsToRemove = null;
-
     private final List<Allele> diploidNoCallAlleles = GATKVariantContextUtils.noCallAlleles(2);
 
     private final Map<Integer, Integer> ploidyToNumberOfAlleles = new LinkedHashMap<Integer, Integer>();
@@ -484,10 +469,6 @@ public final class SelectVariants extends VariantWalker {
         if (selectRandomFraction) {
             logger.info("Selecting approximately " + 100.0*fractionRandom + "% of the variants at random from the variant track");
         }
-
-        // Prepare the variant IDs to keep and to be removed for use by the IDs filter
-        IDsToKeep = getIDsFromFile(rsIDFile);
-        IDsToRemove = getIDsFromFile(XLrsIDFile);
 
         //TODO: this should be refactored/consolidated as part of
         // https://github.com/broadinstitute/gatk/issues/121 and
@@ -672,12 +653,10 @@ public final class SelectVariants extends VariantWalker {
      */
     private SortedSet<String> createSampleNameInclusionList(Map<String, VCFHeader> vcfHeaders) {
         final SortedSet<String> vcfSamples = VcfUtils.getSortedSampleSet(vcfHeaders, GATKVariantContextUtils.GenotypeMergeType.REQUIRE_UNIQUE);
-        final Collection<String> samplesFromFile = SampleUtils.getSamplesFromFiles(sampleFiles);
         final Collection<String> samplesFromExpressions = matchSamplesExpressions(vcfSamples, sampleExpressions);
 
         // first, check overlap between requested and present samples
-        final Set<String> commandLineUniqueSamples = new LinkedHashSet<>(samplesFromFile.size()+samplesFromExpressions.size()+sampleNames.size());
-        commandLineUniqueSamples.addAll(samplesFromFile);
+        final Set<String> commandLineUniqueSamples = new LinkedHashSet<>(samplesFromExpressions.size()+sampleNames.size());
         commandLineUniqueSamples.addAll(samplesFromExpressions);
         commandLineUniqueSamples.addAll(sampleNames);
         commandLineUniqueSamples.removeAll(vcfSamples);
@@ -685,7 +664,6 @@ public final class SelectVariants extends VariantWalker {
         // second, add the requested samples
         samples.addAll(sampleNames);
         samples.addAll(samplesFromExpressions);
-        samples.addAll(samplesFromFile);
 
         logger.debug(Utils.join(",", commandLineUniqueSamples));
 
@@ -710,14 +688,11 @@ public final class SelectVariants extends VariantWalker {
         }
 
         // Exclude samples take precedence over include - remove any excluded samples
-        final Collection<String> XLsamplesFromFile = SampleUtils.getSamplesFromFiles(XLsampleFiles);
         final Collection<String> XLsamplesFromExpressions = matchSamplesExpressions(vcfSamples, XLsampleExpressions);
-        samples.removeAll(XLsamplesFromFile);
         samples.removeAll(XLsampleNames);
         samples.removeAll(XLsamplesFromExpressions);
         noSamplesSpecified = noSamplesSpecified &&
                                 XLsampleNames.isEmpty() &&
-                                XLsamplesFromFile.isEmpty() &&
                                 XLsamplesFromExpressions.isEmpty();
 
         if (samples.isEmpty() && !noSamplesSpecified) {
@@ -803,29 +778,6 @@ public final class SelectVariants extends VariantWalker {
             samples.addAll(ListFileUtils.includeMatching(originalSamples, sampleExpressions, false));
         }
         return samples;
-    }
-
-    /**
-     * Get IDs from a file
-     *
-     * @param file file containing the IDs
-     * @return set of IDs or null if the file is null
-     * @throws UserException.CouldNotReadInputFile if could not read the file
-     */
-    private Set<String> getIDsFromFile(final File file){
-        /** load in the IDs file to a hashset for matching */
-        if (file != null) {
-            Set<String> ids = new LinkedHashSet<>();
-            try (final XReadLines xrl = new XReadLines(file)) {
-                ids.addAll(xrl.readLines().stream().map(String::trim).collect(Collectors.toList()));
-                logger.info("Selecting only variants with one of " + ids.size() + " IDs from " + file);
-            } catch (IOException e) {
-                throw new UserException.CouldNotReadInputFile(file, e);
-            }
-            return ids;
-        }
-
-        return null;
     }
 
     /**

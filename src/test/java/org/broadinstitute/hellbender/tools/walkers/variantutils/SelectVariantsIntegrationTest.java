@@ -1,5 +1,7 @@
 package org.broadinstitute.hellbender.tools.walkers.variantutils;
 
+import org.broadinstitute.barclay.argparser.CommandLineException;
+import org.broadinstitute.hellbender.utils.test.BaseTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -66,10 +68,10 @@ public class SelectVariantsIntegrationTest extends CommandLineProgramTest {
     @Test
     public void testComplexSelection()  throws IOException {
         final String testFile = getToolTestDataDir() + "vcfexample2.vcf";
-        final String samplesFile = getToolTestDataDir() + "samples.txt";
+        final String samplesFile = getToolTestDataDir() + "samples.list";
 
         final IntegrationTestSpec spec = new IntegrationTestSpec(
-                baseTestString(" -sn NA11894 -se 'NA069*' -sf " + samplesFile + " -select 'RMSMAPQ < 170.0'", testFile),
+                baseTestString(" -sn NA11894 -se 'NA069*' -sn " + samplesFile + " -select 'RMSMAPQ < 170.0'", testFile),
                 Collections.singletonList(getToolTestDataDir() + "expected/" + "testSelectVariants_ComplexSelection.vcf")
         );
 
@@ -79,14 +81,27 @@ public class SelectVariantsIntegrationTest extends CommandLineProgramTest {
     @Test
     public void testComplexSelectionWithNonExistingSamples()  throws IOException {
         final String testFile = getToolTestDataDir() + "vcfexample2.vcf";
-        final String samplesFile = getToolTestDataDir() + "samples.txt";
+        final String samplesFile = getToolTestDataDir() + "samples.list";
 
         final IntegrationTestSpec spec = new IntegrationTestSpec(
-                baseTestString(" --ALLOW_NONOVERLAPPING_COMMAND_LINE_SAMPLES  -select 'RMSMAPQ < 170.0' -sn Z -sf " // non existent samples on command line
+                baseTestString(" --ALLOW_NONOVERLAPPING_COMMAND_LINE_SAMPLES  -select 'RMSMAPQ < 170.0' -sn Z -sn " // non existent samples on command line
                         + samplesFile, testFile),
                 Collections.singletonList(getToolTestDataDir() + "expected/" + "testSelectVariants_ComplexSelectionWithNonExistingSamples.vcf")
         );
         spec.executeTest("testComplexSelectionWithNonExistingSamples--" + testFile, this);
+    }
+
+    @Test
+    public void testNonExistentSampleFile() throws IOException {
+        final String testFile = getToolTestDataDir() + "vcfexample2.vcf";
+        final File nonExistentFile = BaseTest.getSafeNonExistentFile("nonexistentSamples.list");
+
+        final IntegrationTestSpec spec = new IntegrationTestSpec(
+                baseTestString(" -sn A -sn Z -sn Q -sn " + nonExistentFile, testFile),
+                1,
+                CommandLineException.class
+        );
+        spec.executeTest("testNonExistentSampleFile--" + testFile, this);
     }
 
     @Test
@@ -107,10 +122,10 @@ public class SelectVariantsIntegrationTest extends CommandLineProgramTest {
     @Test
     public void testSampleExclusionFromFileAndSeparateSample()  throws IOException {
         final String testFile = getToolTestDataDir() + "vcfexample2.vcf";
-        final String samplesFile = getToolTestDataDir() + "samples.txt";
+        final String samplesFile = getToolTestDataDir() + "samples.list";
 
         final IntegrationTestSpec spec = new IntegrationTestSpec(
-                baseTestString(" -xl_sn NA11894 -xl_sf " + samplesFile, testFile),
+                baseTestString(" -xl_sn NA11894 -xl_sn " + samplesFile, testFile),
                 Collections.singletonList(getToolTestDataDir() + "expected/" + "testSelectVariants_SampleExclusionFromFileAndSeparateSample.vcf")
         );
 
@@ -123,10 +138,10 @@ public class SelectVariantsIntegrationTest extends CommandLineProgramTest {
     @Test
     public void testSampleExclusionJustFromFile()  throws IOException {
         final String testFile = getToolTestDataDir() + "vcfexample2.vcf";
-        final String samplesFile = getToolTestDataDir() + "samples.txt";
+        final String samplesFile = getToolTestDataDir() + "samples.list";
 
         final IntegrationTestSpec spec = new IntegrationTestSpec(
-                baseTestString(" -xl_sf " + samplesFile, testFile),
+                baseTestString(" -xl_sn " + samplesFile, testFile),
                 Collections.singletonList(getToolTestDataDir() + "expected/" + "testSelectVariants_SampleExclusionJustFromFile.vcf")
         );
 
@@ -170,10 +185,10 @@ public class SelectVariantsIntegrationTest extends CommandLineProgramTest {
     @Test
     public void testSampleInclusionWithNonexistingSamples()  throws IOException {
         final String testFile = getToolTestDataDir() + "vcfexample2.vcf";
-        final String samplesFile = getToolTestDataDir() + "samples.txt";
+        final String samplesFile = getToolTestDataDir() + "samples.list";
 
         final IntegrationTestSpec spec = new IntegrationTestSpec(
-                baseTestString(" -sn A -sn Z -sn Q -sf " + samplesFile, testFile),
+                baseTestString(" -sn A -sn Z -sn Q -sn " + samplesFile, testFile),
                 1,
                 UserException.BadInput.class
         );
@@ -328,10 +343,10 @@ public class SelectVariantsIntegrationTest extends CommandLineProgramTest {
     @Test
     public void testSelectFromMultiAllelic() throws IOException {
         final String testFile = getToolTestDataDir() + "multi-allelic.bi-allelicInGIH.vcf";
-        final String samplesFile = getToolTestDataDir() + "GIH.samples.files";
+        final String samplesFile = getToolTestDataDir() + "GIH.samples.list";
 
         final IntegrationTestSpec spec = new IntegrationTestSpec(
-                baseTestString(" -sf " + samplesFile + " --excludeNonVariants -trimAlternates", testFile),
+                baseTestString(" -sn " + samplesFile + " --excludeNonVariants -trimAlternates", testFile),
                 Collections.singletonList(getToolTestDataDir() + "expected/" + "testSelectVariants_MultiAllelicExcludeNonVar.vcf")
         );
         spec.executeTest("test select from multi allelic with excludeNonVariants --" + testFile, this);
@@ -501,10 +516,10 @@ public class SelectVariantsIntegrationTest extends CommandLineProgramTest {
     @Test
     public void testInvertSelection()  throws IOException {
         final String testFile = getToolTestDataDir() + "vcfexample2.vcf";
-        final String samplesFile = getToolTestDataDir() + "samples.txt";
+        final String samplesFile = getToolTestDataDir() + "samples.list";
 
         final IntegrationTestSpec spec = new IntegrationTestSpec(
-                baseTestString(" -sn NA11894 -sf " + samplesFile +
+                baseTestString(" -sn NA11894 -sn " + samplesFile +
                                     " -select 'RMSMAPQ < 170.0' -invertSelect ", testFile),
                 Collections.singletonList(getToolTestDataDir() + "expected/" + "testSelectVariants_InvertSelection.vcf")
         );
@@ -518,10 +533,10 @@ public class SelectVariantsIntegrationTest extends CommandLineProgramTest {
     @Test
     public void testInvertJexlSelection()  throws IOException {
         final String testFile = getToolTestDataDir() + "vcfexample2.vcf";
-        final String samplesFile = getToolTestDataDir() + "samples.txt";
+        final String samplesFile = getToolTestDataDir() + "samples.list";
 
         final IntegrationTestSpec spec = new IntegrationTestSpec(
-                baseTestString(" -sn NA11894 -sf " + samplesFile +
+                baseTestString(" -sn NA11894 -sn " + samplesFile +
                         " -select 'RMSMAPQ > 170.0' ", testFile),
                 Collections.singletonList(getToolTestDataDir() + "expected/" + "testSelectVariants_InvertJexlSelection.vcf")
         );
@@ -535,7 +550,7 @@ public class SelectVariantsIntegrationTest extends CommandLineProgramTest {
     @Test
     public void testKeepSelectionID() throws IOException {
         final String testFile = getToolTestDataDir() + "complexExample1.vcf";
-        final String idFile = getToolTestDataDir() + "complexExample1.vcf.id";
+        final String idFile = getToolTestDataDir() + "complexExample1.vcf.id.list";
 
         final IntegrationTestSpec spec = new IntegrationTestSpec(
                 baseTestString(" -IDs " + idFile, testFile),
@@ -551,7 +566,7 @@ public class SelectVariantsIntegrationTest extends CommandLineProgramTest {
     @Test
     public void testExcludeSelectionID() throws IOException {
         final String testFile = getToolTestDataDir() + "complexExample1.vcf";
-        final String idFile = getToolTestDataDir() + "complexExample1.vcf.id";
+        final String idFile = getToolTestDataDir() + "complexExample1.vcf.id.list";
 
         final IntegrationTestSpec spec = new IntegrationTestSpec(
                 baseTestString(" -xlIDs " + idFile, testFile),
