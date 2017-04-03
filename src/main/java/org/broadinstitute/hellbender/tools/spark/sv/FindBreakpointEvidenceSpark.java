@@ -213,7 +213,7 @@ public final class FindBreakpointEvidenceSpark extends GATKSparkTool {
                                            final Map<Integer, String> intervalDispositions ) {
 
         try (final OutputStreamWriter writer = new OutputStreamWriter(new BufferedOutputStream(
-                BucketUtils.createFile(intervalFile, pipelineOptions)))) {
+                BucketUtils.createFile(intervalFile)))) {
             final List<SAMSequenceRecord> contigs = header.getSequenceDictionary().getSequences();
             final int nIntervals = intervals.size();
             for ( int intervalId = 0; intervalId != nIntervals; ++intervalId ) {
@@ -283,7 +283,7 @@ public final class FindBreakpointEvidenceSpark extends GATKSparkTool {
                                        final String filename,
                                        final PipelineOptions pipelineOptions ) {
         try ( final Writer writer =
-                      new BufferedWriter(new OutputStreamWriter(BucketUtils.createFile(filename, pipelineOptions))) ) {
+                      new BufferedWriter(new OutputStreamWriter(BucketUtils.createFile(filename))) ) {
             writer.write("#reads:\t"+readMetadata.getNReads()+"\n");
             writer.write("#partitions:\t"+readMetadata.getNPartitions()+"\n");
             writer.write("max reads/partition:\t"+readMetadata.getMaxReadsInPartition()+"\n");
@@ -520,7 +520,7 @@ public final class FindBreakpointEvidenceSpark extends GATKSparkTool {
         // record the kmers with their interval IDs
         if ( locations.kmerFile != null ) {
             try (final OutputStreamWriter writer = new OutputStreamWriter(new BufferedOutputStream(
-                    BucketUtils.createFile(locations.kmerFile, pipelineOptions)))) {
+                    BucketUtils.createFile(locations.kmerFile)))) {
                 for (final KmerAndInterval kmerAndInterval : filteredKmerIntervals) {
                     writer.write(kmerAndInterval.toString(kSize) + " " + kmerAndInterval.getIntervalId() + "\n");
                 }
@@ -633,7 +633,7 @@ public final class FindBreakpointEvidenceSpark extends GATKSparkTool {
                                     final PipelineOptions pipelineOptions,
                                     final Collection<QNameAndInterval> qNames ) {
         try (final OutputStreamWriter writer = new OutputStreamWriter(new BufferedOutputStream(
-                BucketUtils.createFile(qNameFile, pipelineOptions)))) {
+                BucketUtils.createFile(qNameFile)))) {
             for (final QNameAndInterval qnameAndInterval : qNames) {
                 writer.write(qnameAndInterval.toString() + "\n");
             }

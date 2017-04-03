@@ -20,7 +20,6 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * A utility class that writes out variants to a VCF file.
@@ -60,7 +59,7 @@ class SVVCFWriter {
     private static void writeVariants(final PipelineOptions pipelineOptions, final String outputPath, final String fileName,
                                       final List<VariantContext> variantsArrayList, final SAMSequenceDictionary referenceSequenceDictionary) {
         try (final OutputStream outputStream
-                     = new BufferedOutputStream(BucketUtils.createFile(outputPath + "/" + fileName, pipelineOptions))) {
+                     = new BufferedOutputStream(BucketUtils.createFile(outputPath + "/" + fileName))) {
 
             final VariantContextWriter vcfWriter = getVariantContextWriter(outputStream, referenceSequenceDictionary);
 
