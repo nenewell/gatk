@@ -31,8 +31,10 @@ public class GATKSVVCFHeaderLines {
     public static final String HOMOLOGY_LENGTH = "HOMOLOGY_LENGTH";
     public static final String INV33 = "INV33";
     public static final String INV55 = "INV55";
-    public static final String DUPLICATED_SEQUENCE = "DUPLICATED_SEQUENCE";
+//    public static final String DUPLICATED_SEQUENCE = "DUPLICATED_SEQUENCE";
     public static final String DUPLICATION_NUMBERS = "DUP_NUM";
+
+    public static final String DUP_ANNOT_FROM_OPT = "DUP_ANNOT_FROM_OPT";
 
     static {
         vcfHeaderLines.put(SVTYPE, new VCFInfoHeaderLine(SVTYPE, 1, VCFHeaderLineType.String, "Type of structural variant"));
@@ -56,8 +58,9 @@ public class GATKSVVCFHeaderLines {
         vcfHeaderLines.put(INV33, new VCFInfoHeaderLine(INV33, 0, VCFHeaderLineType.Flag, "Whether the event represents a 3' to 5' inversion"));
         vcfHeaderLines.put(INV55, new VCFInfoHeaderLine(INV55, 0, VCFHeaderLineType.Flag, "Whether the event represents a 5' to 3' inversion"));
 
-        vcfHeaderLines.put(DUPLICATED_SEQUENCE, new VCFInfoHeaderLine(DUPLICATED_SEQUENCE, 1, VCFHeaderLineType.String, "Duplicated sequence on the reference or on the alternate allele"));
+//        vcfHeaderLines.put(DUPLICATED_SEQUENCE, new VCFInfoHeaderLine(DUPLICATED_SEQUENCE, 1, VCFHeaderLineType.String, "Duplicated sequence on the reference or on the alternate allele"));
         vcfHeaderLines.put(DUPLICATION_NUMBERS, new VCFInfoHeaderLine(DUPLICATION_NUMBERS, VCFHeaderLineCount.R, VCFHeaderLineType.Integer, "Number of times the sequence is duplicated on reference and on the alternate alleles"));
+        vcfHeaderLines.put(DUP_ANNOT_FROM_OPT, new VCFInfoHeaderLine(DUP_ANNOT_FROM_OPT, 0, VCFHeaderLineType.Flag, "Whether the duplication annotations are from an experimental optimization procedure"));
     }
 
 }

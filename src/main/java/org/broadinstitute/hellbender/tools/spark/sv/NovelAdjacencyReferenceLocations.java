@@ -6,6 +6,7 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.google.common.annotations.VisibleForTesting;
 import org.broadinstitute.hellbender.utils.SimpleInterval;
+import org.broadinstitute.hellbender.utils.Utils;
 import scala.Tuple2;
 
 import java.io.IOException;
@@ -42,9 +43,9 @@ class NovelAdjacencyReferenceLocations {
         // first get endConnectionType, then get complications, finally use complications to justify breakpoints
         endConnectionType = determineEndConnectionType(chimericAlignment);
 
-        complication = BreakpointComplications.resolveComplications(chimericAlignment);
+        complication = new BreakpointComplications(chimericAlignment);
 
-        final Tuple2<SimpleInterval, SimpleInterval> leftJustifiedBreakpoints = leftJustifyBreakpoints(chimericAlignment, this.complication);
+        final Tuple2<SimpleInterval, SimpleInterval> leftJustifiedBreakpoints = leftJustifyBreakpoints(chimericAlignment, complication);
         leftJustifiedLeftRefLoc = leftJustifiedBreakpoints._1();
         leftJustifiedRightRefLoc = leftJustifiedBreakpoints._2();
     }
@@ -72,8 +73,7 @@ class NovelAdjacencyReferenceLocations {
 
         final String leftBreakpointRefContig, rightBreakpointRefContig;
         final int leftBreakpointCoord, rightBreakpointCoord;
-        if (complication.dupSeqRepeatNumOnRef !=0 && complication.dupSeqRepeatNumOnCtg !=0) { // todo : development artifact-- assuming tandem duplication is not co-existing with inversion
-            final int dupLen = complication.dupSeqForwardStrandRep.length();
+        if (!complication.dupSeqRepeatUnitRefSpan.equals(BreakpointComplications.DUPSEQ_REPEAT_UNIT_NA_VALUE)) { // todo : development artifact-- assuming tandem duplication is not co-existing with inversion
             leftBreakpointRefContig = rightBreakpointRefContig = ca.regionWithLowerCoordOnContig.referenceInterval.getContig();
             final SimpleInterval leftReferenceInterval, rightReferenceInterval;
             if (ca.isForwardStrandRepresentation) {
@@ -84,7 +84,7 @@ class NovelAdjacencyReferenceLocations {
                 rightReferenceInterval = ca.regionWithLowerCoordOnContig.referenceInterval;
             }
             if (complication.dupSeqRepeatNumOnCtg > complication.dupSeqRepeatNumOnRef) {
-                leftBreakpointCoord = leftReferenceInterval.getEnd() - homologyLen - (complication.dupSeqRepeatNumOnCtg - complication.dupSeqRepeatNumOnRef)*dupLen;
+                leftBreakpointCoord = leftReferenceInterval.getEnd() - homologyLen - (complication.dupSeqRepeatNumOnCtg - complication.dupSeqRepeatNumOnRef)*complication.dupSeqRepeatUnitRefSpan.size();
             } else {
                 leftBreakpointCoord = leftReferenceInterval.getEnd() - homologyLen;
             }
@@ -111,6 +111,11 @@ class NovelAdjacencyReferenceLocations {
                 rightBreakpointCoord = rightReferenceInterval.getStart() + homologyLen - 1;
             }
         }
+
+        Utils.validate(leftBreakpointCoord <= rightBreakpointCoord,
+                "Inferred novel adjacency reference locations have left location after right location : " + leftBreakpointCoord + "\t" + rightBreakpointCoord
+                        + ca.toString() + "\n" + complication.toString());
+
         final SimpleInterval leftBreakpoint = new SimpleInterval(leftBreakpointRefContig, leftBreakpointCoord, leftBreakpointCoord);
         final SimpleInterval rightBreakpoint = new SimpleInterval(rightBreakpointRefContig, rightBreakpointCoord, rightBreakpointCoord);
         return new Tuple2<>(leftBreakpoint, rightBreakpoint);
