@@ -92,7 +92,7 @@ class SVVariantConsensusCall implements Serializable {
         final SvType type;
         if (endConnectionType == FIVE_TO_THREE) { // no strand switch happening, so no inversion
             if (start==end) { // something is inserted
-                final boolean hasNoDupSeq = novelAdjacencyReferenceLocations.complication.dupSeqRepeatUnitRefSpan==BreakpointComplications.DUPSEQ_REPEAT_UNIT_NA_VALUE;
+                final boolean hasNoDupSeq = novelAdjacencyReferenceLocations.complication.dupSeqRepeatUnitRefSpan.equals(BreakpointComplications.DUPSEQ_REPEAT_UNIT_NA_VALUE);
                 final boolean hasNoInsertedSeq = novelAdjacencyReferenceLocations.complication.insertedSequenceForwardStrandRep.isEmpty();
                 if (hasNoDupSeq) {
                     if (hasNoInsertedSeq) {
@@ -108,7 +108,7 @@ class SVVariantConsensusCall implements Serializable {
                     }
                 }
             } else {
-                final boolean hasNoDupSeq = novelAdjacencyReferenceLocations.complication.dupSeqRepeatUnitRefSpan==BreakpointComplications.DUPSEQ_REPEAT_UNIT_NA_VALUE;
+                final boolean hasNoDupSeq = novelAdjacencyReferenceLocations.complication.dupSeqRepeatUnitRefSpan.equals(BreakpointComplications.DUPSEQ_REPEAT_UNIT_NA_VALUE);
                 final boolean hasNoInsertedSeq = novelAdjacencyReferenceLocations.complication.insertedSequenceForwardStrandRep.isEmpty();
                 if (hasNoDupSeq) {
                     if (hasNoInsertedSeq) {
@@ -154,7 +154,7 @@ class SVVariantConsensusCall implements Serializable {
             attributeMap.put(GATKSVVCFHeaderLines.HOMOLOGY_LENGTH, novelAdjacencyReferenceLocations.complication.homologyForwardStrandRep.length());
         }
 
-        if (!(novelAdjacencyReferenceLocations.complication.dupSeqRepeatUnitRefSpan==BreakpointComplications.DUPSEQ_REPEAT_UNIT_NA_VALUE)) {
+        if (!(novelAdjacencyReferenceLocations.complication.dupSeqRepeatUnitRefSpan.equals(BreakpointComplications.DUPSEQ_REPEAT_UNIT_NA_VALUE))) {
 //            attributeMap.put(GATKSVVCFHeaderLines.DUPLICATED_SEQUENCE, novelAdjacencyReferenceLocations.complication.dupSeqForwardStrandRep);
             attributeMap.put(GATKSVVCFHeaderLines.DUP_REPET_UNIT_REF_SPAN, novelAdjacencyReferenceLocations.complication.dupSeqRepeatUnitRefSpan.toString());
             if(!novelAdjacencyReferenceLocations.complication.cigarStringsForDupSeqOnCtg.isEmpty()) {

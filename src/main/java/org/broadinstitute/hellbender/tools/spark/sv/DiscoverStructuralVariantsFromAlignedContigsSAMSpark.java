@@ -4,6 +4,7 @@ import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.variant.variantcontext.VariantContext;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -32,6 +33,7 @@ import static org.broadinstitute.hellbender.tools.spark.sv.DiscoverStructuralVar
         programGroup = SparkProgramGroup.class)
 public final class DiscoverStructuralVariantsFromAlignedContigsSAMSpark extends GATKSparkTool {
     private static final long serialVersionUID = 1L;
+    private static final Logger log = LogManager.getLogger(DiscoverStructuralVariantsFromAlignedContigsSAMSpark.class);
 
     @Argument(doc = "URL of the output path", shortName = "outputPath",
             fullName = "outputPath", optional = false)
@@ -72,7 +74,8 @@ public final class DiscoverStructuralVariantsFromAlignedContigsSAMSpark extends 
         final SAMSequenceDictionary referenceSequenceDictionary = new ReferenceMultiSource(pipelineOptions, fastaReference, ReferenceWindowFunctions.IDENTITY_FUNCTION).getReferenceSequenceDictionary(null);
 
         final JavaRDD<VariantContext> variants = callVariantsFromAlignmentRegions(ctx.broadcast(getReference()), alignmentRegionsIterable, LogManager.getLogger(DiscoverStructuralVariantsFromAlignedContigsSAMSpark.class));
-        SVVCFWriter.writeVCF(pipelineOptions, outputPath, SVConstants.CallingStepConstants.INVERSIONS_OUTPUT_VCF, fastaReference, variants);
+
+        SVVCFWriter.writeVCF(pipelineOptions, outputPath, SVConstants.CallingStepConstants.INVERSIONS_OUTPUT_VCF, fastaReference, variants, log);
     }
 
 }

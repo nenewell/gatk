@@ -438,8 +438,9 @@ final class BreakpointComplications {
         dupSeqRepeatUnitRefSpan = new SimpleInterval(input.readString(), input.readInt(), input.readInt());
         dupSeqRepeatNumOnRef = input.readInt();
         dupSeqRepeatNumOnCtg = input.readInt();
+        final int cigarCounts = input.readInt();
         cigarStringsForDupSeqOnCtg = new ArrayList<>(dupSeqRepeatNumOnCtg);
-        for(int i=0; i<dupSeqRepeatNumOnCtg; ++i) {
+        for(int i=0; i<cigarCounts; ++i) {
             cigarStringsForDupSeqOnCtg.add(input.readString());
         }
         dupAnnotFromOptimization = input.readBoolean();
@@ -459,7 +460,8 @@ final class BreakpointComplications {
         output.writeInt(dupSeqRepeatUnitRefSpan.getEnd());
         output.writeInt(dupSeqRepeatNumOnRef);
         output.writeInt(dupSeqRepeatNumOnCtg);
-        for(int i=0; i<dupSeqRepeatNumOnCtg; ++i) {
+        output.writeInt(cigarStringsForDupSeqOnCtg.size());
+        for(int i=0; i<cigarStringsForDupSeqOnCtg.size(); ++i) {
             output.writeString(cigarStringsForDupSeqOnCtg.get(i));
         }
         output.writeBoolean(dupAnnotFromOptimization);

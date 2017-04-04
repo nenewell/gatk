@@ -59,9 +59,8 @@ public final class DiscoverStructuralVariantsFromAlignedContigsSpark extends GAT
 
         final JavaRDD<VariantContext> variants
                 = callVariantsFromAlignmentRegions(ctx.broadcast(getReference()), alignmentRegionsWithContigSequences, log).cache();
-        log.info("Called " + variants.count() + " variants");
 
-        SVVCFWriter.writeVCF(getAuthenticatedGCSOptions(), outputPath, outputName, fastaReference, variants);
+        SVVCFWriter.writeVCF(getAuthenticatedGCSOptions(), outputPath, outputName, fastaReference, variants, log);
     }
 
     /**
