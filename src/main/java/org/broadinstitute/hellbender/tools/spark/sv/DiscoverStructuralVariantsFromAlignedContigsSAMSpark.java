@@ -75,7 +75,7 @@ public final class DiscoverStructuralVariantsFromAlignedContigsSAMSpark extends 
 
         final JavaRDD<VariantContext> variants = callVariantsFromAlignmentRegions(ctx.broadcast(getReference()), alignmentRegionsIterable, LogManager.getLogger(DiscoverStructuralVariantsFromAlignedContigsSAMSpark.class));
 
-        SVVCFWriter.writeVCF(pipelineOptions, outputPath, SVConstants.CallingStepConstants.INVERSIONS_OUTPUT_VCF, fastaReference, variants, log);
+        SVVCFWriter.writeVCF(pipelineOptions, outputPath, SVConstants.CallingStepConstants.CURRENTLY_CAPABLE_VARIANTS_VCF, fastaReference, variants, log);
     }
 
 }
