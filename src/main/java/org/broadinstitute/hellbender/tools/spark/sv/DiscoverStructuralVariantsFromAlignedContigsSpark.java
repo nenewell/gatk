@@ -84,6 +84,6 @@ public final class DiscoverStructuralVariantsFromAlignedContigsSpark extends GAT
                 .flatMap( input -> ChimericAlignment.fromSplitAlignments(input).iterator())                                 // 1. AR -> {CA}
                 .mapToPair(ca -> new Tuple2<>(new NovelAdjacencyReferenceLocations(ca), ca))                                // 2. CA -> BP
                 .groupByKey()                                                                                               // 3. {consensus BP}
-                .map(tuple2 -> SVVariantConsensusCall.callVariantsFromConsensus(tuple2, broadcastReference));               // BP annotated with list of CA's
+                .map(tuple2 -> SVVariantConsensusCall.discoverVariantsFromConsensus(tuple2, broadcastReference));               // BP annotated with list of CA's
     }
 }

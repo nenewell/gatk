@@ -5,6 +5,7 @@ import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.vcf.VCFConstants;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.spark.broadcast.Broadcast;
 import org.broadinstitute.hellbender.engine.datasources.ReferenceMultiSource;
 import org.broadinstitute.hellbender.exceptions.GATKException;
@@ -35,8 +36,8 @@ class SVVariantConsensusCall implements Serializable {
      * @param broadcastReference                broadcasted reference
      * @throws IOException                      due to read operations on the reference
      */
-    static VariantContext callVariantsFromConsensus(final Tuple2<NovelAdjacencyReferenceLocations, Iterable<ChimericAlignment>> breakpointPairAndItsEvidence,
-                                                    final Broadcast<ReferenceMultiSource> broadcastReference)
+    static VariantContext discoverVariantsFromConsensus(final Tuple2<NovelAdjacencyReferenceLocations, Iterable<ChimericAlignment>> breakpointPairAndItsEvidence,
+                                                        final Broadcast<ReferenceMultiSource> broadcastReference)
             throws IOException {
 
         final NovelAdjacencyReferenceLocations novelAdjacencyReferenceLocations = breakpointPairAndItsEvidence._1;
@@ -155,7 +156,14 @@ class SVVariantConsensusCall implements Serializable {
 
         if (!(novelAdjacencyReferenceLocations.complication.dupSeqRepeatUnitRefSpan==BreakpointComplications.DUPSEQ_REPEAT_UNIT_NA_VALUE)) {
 //            attributeMap.put(GATKSVVCFHeaderLines.DUPLICATED_SEQUENCE, novelAdjacencyReferenceLocations.complication.dupSeqForwardStrandRep);
+            attributeMap.put(GATKSVVCFHeaderLines.DUP_REPET_UNIT_REF_SPAN, novelAdjacencyReferenceLocations.complication.dupSeqRepeatUnitRefSpan.toString());
+            if(!novelAdjacencyReferenceLocations.complication.cigarStringsForDupSeqOnCtg.isEmpty()) {
+                attributeMap.put(GATKSVVCFHeaderLines.DUP_ASM_CTG_CIGARS, StringUtils.join(novelAdjacencyReferenceLocations.complication.cigarStringsForDupSeqOnCtg, VCFConstants.INFO_FIELD_ARRAY_SEPARATOR));
+            }
             attributeMap.put(GATKSVVCFHeaderLines.DUPLICATION_NUMBERS, new int[]{novelAdjacencyReferenceLocations.complication.dupSeqRepeatNumOnRef, novelAdjacencyReferenceLocations.complication.dupSeqRepeatNumOnCtg});
+            if(novelAdjacencyReferenceLocations.complication.dupAnnotFromOptimization) {
+                attributeMap.put(GATKSVVCFHeaderLines.DUP_ANNOT_FROM_OPT, "");
+            }
         }
         return attributeMap;
     }

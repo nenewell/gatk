@@ -208,7 +208,7 @@ public class SVVariantConsensusCallUnitTest extends BaseTest {
         final NovelAdjacencyReferenceLocations breakpoints = testData._3();
 
         final VariantContext variantContext
-                = SVVariantConsensusCall.callVariantsFromConsensus(new Tuple2<>(breakpoints, evidence), SparkContextFactory.getTestSparkContext().broadcast(SVCallerTestDataProvider.reference));
+                = SVVariantConsensusCall.discoverVariantsFromConsensus(new Tuple2<>(breakpoints, evidence), SparkContextFactory.getTestSparkContext().broadcast(SVCallerTestDataProvider.reference));
 
         final List<String> attributeKeys = variantContext.getAttributes().keySet().stream().sorted().collect(Collectors.toList());
 
@@ -258,49 +258,49 @@ public class SVVariantConsensusCallUnitTest extends BaseTest {
         testData = SVCallerTestDataProvider.forSimpleTanDupContraction_minus;
 
         seeIfItWorks_integrative(testData, Stream.concat( commonAttributes.stream(),
-                Sets.newHashSet(SVConstants.CallingStepConstants.TANDUP_CONTRACTION_STRING, /*GATKSVVCFHeaderLines.DUPLICATED_SEQUENCE,*/ GATKSVVCFHeaderLines.DUPLICATION_NUMBERS, GATKSVVCFHeaderLines.HOMOLOGY, GATKSVVCFHeaderLines.HOMOLOGY_LENGTH).stream())
+                Sets.newHashSet(SVConstants.CallingStepConstants.TANDUP_CONTRACTION_STRING, /*GATKSVVCFHeaderLines.DUPLICATED_SEQUENCE,*/ GATKSVVCFHeaderLines.DUP_REPET_UNIT_REF_SPAN, GATKSVVCFHeaderLines.DUPLICATION_NUMBERS, GATKSVVCFHeaderLines.HOMOLOGY, GATKSVVCFHeaderLines.HOMOLOGY_LENGTH).stream())
                 .sorted().collect(Collectors.toList()));
 
         // simple tandem dup expansion from 1 unit to 2 units
         testData = SVCallerTestDataProvider.forSimpleTanDupExpansion_plus;
 
         seeIfItWorks_integrative(testData, Stream.concat( commonAttributes.stream(),
-                Sets.newHashSet(SVConstants.CallingStepConstants.TANDUP_EXPANSION_STRING, /*GATKSVVCFHeaderLines.DUPLICATED_SEQUENCE,*/ GATKSVVCFHeaderLines.DUPLICATION_NUMBERS).stream())
+                Sets.newHashSet(SVConstants.CallingStepConstants.TANDUP_EXPANSION_STRING, /*GATKSVVCFHeaderLines.DUPLICATED_SEQUENCE,*/ GATKSVVCFHeaderLines.DUP_REPET_UNIT_REF_SPAN, GATKSVVCFHeaderLines.DUP_ASM_CTG_CIGARS, GATKSVVCFHeaderLines.DUPLICATION_NUMBERS).stream())
                 .sorted().collect(Collectors.toList()));
 
         // simple tandem dup expansion from 1 unit to 2 units and novel insertion
         testData = SVCallerTestDataProvider.forSimpleTanDupExpansionWithNovelIns_minus;
 
         seeIfItWorks_integrative(testData, Stream.concat( commonAttributes.stream(),
-                Sets.newHashSet(SVConstants.CallingStepConstants.TANDUP_EXPANSION_STRING, /*GATKSVVCFHeaderLines.DUPLICATED_SEQUENCE,*/ GATKSVVCFHeaderLines.DUPLICATION_NUMBERS, GATKSVVCFHeaderLines.INSERTED_SEQUENCE).stream())
+                Sets.newHashSet(SVConstants.CallingStepConstants.TANDUP_EXPANSION_STRING, /*GATKSVVCFHeaderLines.DUPLICATED_SEQUENCE,*/ GATKSVVCFHeaderLines.DUP_REPET_UNIT_REF_SPAN, GATKSVVCFHeaderLines.DUP_ASM_CTG_CIGARS, GATKSVVCFHeaderLines.DUPLICATION_NUMBERS, GATKSVVCFHeaderLines.INSERTED_SEQUENCE).stream())
                 .sorted().collect(Collectors.toList()));
 
         // tandem dup expansion from 1 unit to 2 units with pseudo-homology
         testData = SVCallerTestDataProvider.forComplexTanDup_1to2_pseudoHom_plus;
 
         seeIfItWorks_integrative(testData, Stream.concat( commonAttributes.stream(),
-                Sets.newHashSet(SVConstants.CallingStepConstants.TANDUP_EXPANSION_STRING, /*GATKSVVCFHeaderLines.DUPLICATED_SEQUENCE,*/ GATKSVVCFHeaderLines.DUPLICATION_NUMBERS, GATKSVVCFHeaderLines.HOMOLOGY, GATKSVVCFHeaderLines.HOMOLOGY_LENGTH).stream())
+                Sets.newHashSet(SVConstants.CallingStepConstants.TANDUP_EXPANSION_STRING, /*GATKSVVCFHeaderLines.DUPLICATED_SEQUENCE,*/ GATKSVVCFHeaderLines.DUP_REPET_UNIT_REF_SPAN, GATKSVVCFHeaderLines.DUPLICATION_NUMBERS, GATKSVVCFHeaderLines.DUP_ANNOT_FROM_OPT, GATKSVVCFHeaderLines.HOMOLOGY, GATKSVVCFHeaderLines.HOMOLOGY_LENGTH).stream())
                 .sorted().collect(Collectors.toList()));
 
         // tandem dup contraction from 2 units to 1 unit with pseudo-homology
         testData = SVCallerTestDataProvider.forComplexTanDup_2to1_pseudoHom_minus;
 
         seeIfItWorks_integrative(testData, Stream.concat( commonAttributes.stream(),
-                Sets.newHashSet(SVConstants.CallingStepConstants.TANDUP_CONTRACTION_STRING, /*GATKSVVCFHeaderLines.DUPLICATED_SEQUENCE,*/ GATKSVVCFHeaderLines.DUPLICATION_NUMBERS, GATKSVVCFHeaderLines.HOMOLOGY, GATKSVVCFHeaderLines.HOMOLOGY_LENGTH).stream())
+                Sets.newHashSet(SVConstants.CallingStepConstants.TANDUP_CONTRACTION_STRING, /*GATKSVVCFHeaderLines.DUPLICATED_SEQUENCE,*/ GATKSVVCFHeaderLines.DUP_REPET_UNIT_REF_SPAN, GATKSVVCFHeaderLines.DUPLICATION_NUMBERS, GATKSVVCFHeaderLines.DUP_ANNOT_FROM_OPT, GATKSVVCFHeaderLines.HOMOLOGY, GATKSVVCFHeaderLines.HOMOLOGY_LENGTH).stream())
                 .sorted().collect(Collectors.toList()));
 
         // tandem dup contraction from 3 units to 2 units
         testData = SVCallerTestDataProvider.forComplexTanDup_3to2_noPseudoHom_plus;
 
         seeIfItWorks_integrative(testData, Stream.concat( commonAttributes.stream(),
-                Sets.newHashSet(SVConstants.CallingStepConstants.TANDUP_CONTRACTION_STRING, /*GATKSVVCFHeaderLines.DUPLICATED_SEQUENCE,*/ GATKSVVCFHeaderLines.DUPLICATION_NUMBERS, GATKSVVCFHeaderLines.HOMOLOGY, GATKSVVCFHeaderLines.HOMOLOGY_LENGTH).stream())
+                Sets.newHashSet(SVConstants.CallingStepConstants.TANDUP_CONTRACTION_STRING, /*GATKSVVCFHeaderLines.DUPLICATED_SEQUENCE,*/ GATKSVVCFHeaderLines.DUP_REPET_UNIT_REF_SPAN, GATKSVVCFHeaderLines.DUPLICATION_NUMBERS, GATKSVVCFHeaderLines.DUP_ANNOT_FROM_OPT, GATKSVVCFHeaderLines.HOMOLOGY, GATKSVVCFHeaderLines.HOMOLOGY_LENGTH).stream())
                 .sorted().collect(Collectors.toList()));
 
         // tandem dup expansion from 2 units to 3 units
         testData = SVCallerTestDataProvider.forComplexTanDup_2to3_noPseudoHom_minus;
 
         seeIfItWorks_integrative(testData, Stream.concat( commonAttributes.stream(),
-                Sets.newHashSet(SVConstants.CallingStepConstants.TANDUP_EXPANSION_STRING, /*GATKSVVCFHeaderLines.DUPLICATED_SEQUENCE,*/ GATKSVVCFHeaderLines.DUPLICATION_NUMBERS, GATKSVVCFHeaderLines.HOMOLOGY, GATKSVVCFHeaderLines.HOMOLOGY_LENGTH).stream())
+                Sets.newHashSet(SVConstants.CallingStepConstants.TANDUP_EXPANSION_STRING, /*GATKSVVCFHeaderLines.DUPLICATED_SEQUENCE,*/ GATKSVVCFHeaderLines.DUP_REPET_UNIT_REF_SPAN, GATKSVVCFHeaderLines.DUPLICATION_NUMBERS, GATKSVVCFHeaderLines.DUP_ANNOT_FROM_OPT, GATKSVVCFHeaderLines.HOMOLOGY, GATKSVVCFHeaderLines.HOMOLOGY_LENGTH).stream())
                 .sorted().collect(Collectors.toList()));
     }
 }
