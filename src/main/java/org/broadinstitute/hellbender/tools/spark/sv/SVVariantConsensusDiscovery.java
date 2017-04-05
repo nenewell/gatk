@@ -185,7 +185,7 @@ class SVVariantConsensusDiscovery implements Serializable {
             }
             attributeMap.put(GATKSVVCFHeaderLines.DUPLICATION_NUMBERS, new int[]{novelAdjacencyReferenceLocations.complication.dupSeqRepeatNumOnRef, novelAdjacencyReferenceLocations.complication.dupSeqRepeatNumOnCtg});
             if(novelAdjacencyReferenceLocations.complication.dupAnnotFromOptimization) {
-                attributeMap.put(GATKSVVCFHeaderLines.DUP_ANNOT_FROM_OPT, "");
+                attributeMap.put(GATKSVVCFHeaderLines.DUP_ANNOTATIONS_IMPRECISE, "");
             }
         }
         return attributeMap;

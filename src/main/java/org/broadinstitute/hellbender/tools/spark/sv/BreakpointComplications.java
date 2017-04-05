@@ -21,13 +21,13 @@ import java.util.*;
  * A helper struct for annotating complications that make the locations represented by its associated {@link NovelAdjacencyReferenceLocations}
  * a little ambiguous, so that downstream analysis could infer sv type with these complications.
  * To be updated as more types of complications can be processed and handled by
- * {@link #resolveComplications(ChimericAlignment)}.
+ * {@link BreakpointComplications(ChimericAlignment)}.
  */
 @DefaultSerializer(BreakpointComplications.Serializer.class)
 final class BreakpointComplications {
 
     /**
-     * In {@link BreakpointComplications#resolveComplications(ChimericAlignment)} where the naive attempt to resolve number of tandem repeats
+     * In {@link BreakpointComplications(ChimericAlignment)} where the naive attempt to resolve number of tandem repeats
      * on the reference and sample is done, we assume the lower number of repeats is no higher than this number.
      */
     private static final int MAX_LOWER_CN = 10;
@@ -50,56 +50,23 @@ final class BreakpointComplications {
 
 
     /**
-     * Given an ChimericAlignment representing two reference intervals rearranged as two intervals on the locally-assembled contig,
-     * identify potential complications such as homology and duplication on the reference and/or on the contig.
-     */
-    @VisibleForTesting
-    static BreakpointComplications resolveComplications(final ChimericAlignment chimericAlignment)
-            throws IOException {
-
-        final SimpleInterval leftReferenceInterval  = chimericAlignment.getCoordSortedReferenceIntervals()._1,
-                             rightReferenceInterval = chimericAlignment.getCoordSortedReferenceIntervals()._2;
-
-        final AlignmentRegion firstContigRegion  = chimericAlignment.regionWithLowerCoordOnContig,
-                              secondContigRegion = chimericAlignment.regionWithHigherCoordOnContig;
-
-        final byte[] contigSeq = chimericAlignment.contigSeq;
-
-        // a segment with lower coordinate on the locally-assembled contig could map to a higher reference coordinate region
-        // under two basic types of SV's: inversion (strand switch necessary) and translocation (no strand switch necessary)
-        final boolean isNotSimpleTranslocation = ChimericAlignment.isNotSimpleTranslocation(chimericAlignment.regionWithLowerCoordOnContig, chimericAlignment.regionWithHigherCoordOnContig,
-                chimericAlignment.strandSwitch, ChimericAlignment.involvesRefPositionSwitch(firstContigRegion, secondContigRegion));
-        if (chimericAlignment.strandSwitch!= ChimericAlignment.StrandSwitch.NO_SWITCH) { // the case involves an inversion
-            // TODO: 12/5/16 duplication detection to be done for inversion alleles
-            @SuppressWarnings("unchecked")
-            final BreakpointComplications result = new BreakpointComplications(getHomology(firstContigRegion, secondContigRegion, contigSeq),
-                    getInsertedSequence(firstContigRegion, secondContigRegion, contigSeq),
-                    DUPSEQ_REPEAT_UNIT_NA_VALUE, 0, 0, Collections.EMPTY_LIST, false); // the "un-necessary" local var is for the warning suppression annotation
-            return result;
-        } else if (isNotSimpleTranslocation) {
-            return getLocationComplicationForInsDel(chimericAlignment, leftReferenceInterval, rightReferenceInterval, contigSeq);
-        } else { // TODO: 12/5/16 simple translocation, don't tackle yet
-            return UNHANDLED_CASE;
-        }
-    }
-
-    /**
      * Given an {@link ChimericAlignment} representing two reference intervals rearranged as two intervals on the locally-assembled contig,
      * identify potential complications such as homology and duplication on the reference and/or on the contig.
      */
     @SuppressWarnings("unchecked")
     BreakpointComplications(final ChimericAlignment chimericAlignment) {
-        final SimpleInterval leftReferenceInterval  = chimericAlignment.getCoordSortedReferenceIntervals()._1,
-                rightReferenceInterval = chimericAlignment.getCoordSortedReferenceIntervals()._2;
+        final SimpleInterval leftReferenceInterval  = chimericAlignment.getCoordSortedReferenceIntervals()._1;
+        final SimpleInterval rightReferenceInterval = chimericAlignment.getCoordSortedReferenceIntervals()._2;
 
-        final AlignmentRegion firstContigRegion  = chimericAlignment.regionWithLowerCoordOnContig,
-                secondContigRegion = chimericAlignment.regionWithHigherCoordOnContig;
+        final AlignmentRegion firstContigRegion  = chimericAlignment.regionWithLowerCoordOnContig;
+        final AlignmentRegion secondContigRegion = chimericAlignment.regionWithHigherCoordOnContig;
 
         final byte[] contigSeq = chimericAlignment.contigSeq;
 
         // a segment with lower coordinate on the locally-assembled contig could map to a higher reference coordinate region
         // under two basic types of SV's: inversion (strand switch necessary) and translocation (no strand switch necessary)
-        final boolean isNotSimpleTranslocation = ChimericAlignment.isNotSimpleTranslocation(chimericAlignment.regionWithLowerCoordOnContig, chimericAlignment.regionWithHigherCoordOnContig,
+        final boolean isNotSimpleTranslocation
+                = ChimericAlignment.isNotSimpleTranslocation(chimericAlignment.regionWithLowerCoordOnContig, chimericAlignment.regionWithHigherCoordOnContig,
                 chimericAlignment.strandSwitch, ChimericAlignment.involvesRefPositionSwitch(firstContigRegion, secondContigRegion));
 
         if (chimericAlignment.strandSwitch!= ChimericAlignment.StrandSwitch.NO_SWITCH) { // the case involves an inversion
@@ -146,7 +113,7 @@ final class BreakpointComplications {
 
         String homologyForwardStrandRepresentation="", insertedSeqForwardStrandRepresentation="";
         SimpleInterval dupSeqRepeatUnitRefSpan = DUPSEQ_REPEAT_UNIT_NA_VALUE;
-        final List<String> dupSeqCigarStrings = new ArrayList<>();
+        final List<String> dupSeqCigarStrings = new ArrayList<>(2);
         int dupSeqRepeatNumOnRef=0, dupSeqRepeatNumOnCtg=0;
         if (distBetweenAlignRegionsOnRef>0 && distBetweenAlignRegionsOnCtg==0) {        // Deletion: simple deletion, deleted sequence is [r1e+1, r2b-1] on the reference
             homologyForwardStrandRepresentation    = "";
@@ -220,12 +187,16 @@ final class BreakpointComplications {
     }
 
     /**
-     * Given a {@link AlignmentRegion} signalling a tandem duplication, extract corresponding CIGAR between the suspected repeated
-     * sequence as marked on reference between [{@code r2b}, {@code r1e}], and the sequence on the contig.
+     * Given a {@link AlignmentRegion} from a pair of ARs that forms a {@link ChimericAlignment} signalling a tandem duplication,
+     * extract a CIGAR from the {@link AlignmentRegion#cigarAlong5to3DirectionOfContig}
+     * that corresponds to the alignment between the suspected repeated sequence on reference between
+     * [{@code alignmentRegionTwoReferenceIntervalSpanBegin}, {@code alignmentRegionOneReferenceIntervalSpanEnd}],
+     * and the sequence in {@link AlignmentRegion#referenceInterval}.
      */
     @VisibleForTesting
     static Cigar extractCigarForTandup(final AlignmentRegion contigRegion,
-                                       final int r1e, final int r2b) {
+                                       final int alignmentRegionOneReferenceIntervalSpanEnd,
+                                       final int alignmentRegionTwoReferenceIntervalSpanBegin) {
 
         final List<CigarElement> elementList = contigRegion.cigarAlong5to3DirectionOfContig.getCigarElements();
         final List<CigarElement> result = new ArrayList<>(elementList.size());
@@ -239,19 +210,19 @@ final class BreakpointComplications {
                 final CigarOperator operator = cigarElement.getOperator();
                 if ( !operator.isClipping() ) {
                     refBasesConsumed += operator.consumesReferenceBases() ? cigarElement.getLength() : 0;
-                    if ( refStart+refBasesConsumed > r2b){ // entered suspected repeat region on ref
+                    if ( refStart+refBasesConsumed > alignmentRegionTwoReferenceIntervalSpanBegin){ // entered suspected repeat region on ref
                         if (initiatedCollection){
-                            if (refStart+refBasesConsumed <= r1e+1) {
+                            if (refStart+refBasesConsumed <= alignmentRegionOneReferenceIntervalSpanEnd+1) {
                                 result.add(cigarElement);
                             } else {
-                                result.add(new CigarElement(cigarElement.getLength()-(refStart+refBasesConsumed-r1e)+1, CigarOperator.M));
+                                result.add(new CigarElement(cigarElement.getLength()-(refStart+refBasesConsumed-alignmentRegionOneReferenceIntervalSpanEnd)+1, CigarOperator.M));
                                 break;
                             }
                         } else {
-                            if (refStart+refBasesConsumed <= r1e+1) { // entering for the first time and the span doesn't overshoot
-                                result.add(new CigarElement(refStart+refBasesConsumed-r2b, CigarOperator.M));
+                            if (refStart+refBasesConsumed <= alignmentRegionOneReferenceIntervalSpanEnd+1) { // entering for the first time and the span doesn't overshoot
+                                result.add(new CigarElement(refStart+refBasesConsumed-alignmentRegionTwoReferenceIntervalSpanBegin, CigarOperator.M));
                             } else {                                // entering for the first time but the span overshoots pass the repeated region on ref
-                                result.add(new CigarElement(cigarElement.getLength()-(refStart+refBasesConsumed-r1e)+1, CigarOperator.M));
+                                result.add(new CigarElement(cigarElement.getLength()-(refStart+refBasesConsumed-alignmentRegionOneReferenceIntervalSpanEnd)+1, CigarOperator.M));
                                 break; // just one step overshoots
                             }
                             initiatedCollection = true;
@@ -264,19 +235,19 @@ final class BreakpointComplications {
                 final CigarOperator operator = cigarElement.getOperator();
                 if ( !operator.isClipping() ) {
                     refBasesConsumed += operator.consumesReferenceBases() ? cigarElement.getLength() : 0;
-                    if ( refEnd-refBasesConsumed < r1e ) {
+                    if ( refEnd-refBasesConsumed < alignmentRegionOneReferenceIntervalSpanEnd ) {
                         if (initiatedCollection){
-                            if (refEnd-refBasesConsumed >= r2b-1) {
+                            if (refEnd-refBasesConsumed >= alignmentRegionTwoReferenceIntervalSpanBegin-1) {
                                 result.add(cigarElement);
                             } else {
-                                result.add(new CigarElement(cigarElement.getLength()-(r2b-refEnd+refBasesConsumed)+1, CigarOperator.M));
+                                result.add(new CigarElement(cigarElement.getLength()-(alignmentRegionTwoReferenceIntervalSpanBegin-refEnd+refBasesConsumed)+1, CigarOperator.M));
                                 break;
                             }
                         } else {
-                            if (refEnd-refBasesConsumed >= r2b-1) {
-                                result.add(new CigarElement(r1e - (refEnd-refBasesConsumed), CigarOperator.M));
+                            if (refEnd-refBasesConsumed >= alignmentRegionTwoReferenceIntervalSpanBegin-1) {
+                                result.add(new CigarElement(alignmentRegionOneReferenceIntervalSpanEnd - (refEnd-refBasesConsumed), CigarOperator.M));
                             } else {
-                                result.add(new CigarElement(cigarElement.getLength()-(r2b-(refEnd-refBasesConsumed))+1, CigarOperator.M));
+                                result.add(new CigarElement(cigarElement.getLength()-(alignmentRegionTwoReferenceIntervalSpanBegin-(refEnd-refBasesConsumed))+1, CigarOperator.M));
                                 break;
                             }
                             initiatedCollection = true;
@@ -307,7 +278,7 @@ final class BreakpointComplications {
     }
 
     /**
-     * Note: not suitable for the most complicated case dealt with in {@link BreakpointComplications#resolveComplications(ChimericAlignment)}
+     * Note: not suitable for the most complicated case dealt with in {@link BreakpointComplications(ChimericAlignment)}
      * @return Inserted sequence using two alignments of the same contig: as indicated by their separation on the the contig itself.
      */
     @VisibleForTesting

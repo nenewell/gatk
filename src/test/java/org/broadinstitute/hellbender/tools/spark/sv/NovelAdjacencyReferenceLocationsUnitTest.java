@@ -247,7 +247,7 @@ public class NovelAdjacencyReferenceLocationsUnitTest extends BaseTest{
         final AlignmentRegion region1 = new AlignmentRegion("1", "contig-1", new SimpleInterval("21", 100001, 100100), TextCigarCodec.decode("100M"), true, 60, 0, 1 ,100);
         final AlignmentRegion region2 = new AlignmentRegion("1", "contig-1", new SimpleInterval("21", 100101, 100200), TextCigarCodec.decode("100M"), true, 60, 0, 101 ,200);
         final ChimericAlignment chimericAlignment = new ChimericAlignment(region1, region2, SVCallerTestDataProvider.makeDummySequence(200, (byte)'A'), Collections.emptyList());
-        BreakpointComplications.resolveComplications(chimericAlignment);
+        new BreakpointComplications(chimericAlignment);
     }
 
     /**
@@ -460,7 +460,12 @@ public class NovelAdjacencyReferenceLocationsUnitTest extends BaseTest{
         Assert.assertEquals(breakpoints.endConnectionType, FIVE_TO_THREE);
     }
 
-    // TODO: 4/3/17 enable when transolocations can be handled
+    /**
+     * todo : see below
+     * Tests a simple inter-chromosomal translocation event, which can not be handled yet [4/4/2017];
+     *   enable (and definitely expand test cases) when such variants can be handled
+     * @throws Exception
+     */
     @Test(enabled = false)
     public void testGetAssembledBreakpointsFromAlignmentRegions() throws Exception {
         final byte[] contigSequence = "GACGAACGATTTGACTTTAATATGAAATGTTTTATGTGGGCTATAAAATTATCCAAACTCGACACAGGACATTTTGAGCTTATTTCCAAATCATCTGGCCTTCATCTACCCACTGGAACTATTACTCTGCTGGGTCCTCATGGAAACATATCTTTCAGCCCTAACAATGAGACTACAGACATCTACGTCCCCAACACAACAGCTAAAAAGCAGTAGAATGTCAGAAAGGCTATCCACTTAGCCCTTGGCTGACAGGCCCCACTGAGCATCCTTTGCGAAGTCCATTTACTAGCTAATTCATAATTTACACAAGGCATTCAGACATAGCAGCTAAGATATAAAACATTTATCAACACAGGGACTAGTTTGTCATTTTAAAATAATTATGTTTAAGTAAGCCAATAAAGTCTATCTTCTCCAATTTACTTATTGAGCTTTATGAGGCAATTTAAGTCCCGATTTTGGGGGGTATGTATGAAAGGAGAGCATGGAAATGCCATTTGCTCCCTGAAGTTTTTATCTTTTTTTTTTTGAGATAGAGTCTTGTGTTTTCTGTGGAGTACATGAGTATGCATCAAAGCTAACAACGCCCACTGCCCTGTTAGTCAAATACCTTTGA".getBytes();
