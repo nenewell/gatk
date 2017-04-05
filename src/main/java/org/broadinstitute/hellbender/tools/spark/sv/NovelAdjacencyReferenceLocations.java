@@ -69,11 +69,11 @@ class NovelAdjacencyReferenceLocations {
     @VisibleForTesting
     static Tuple2<SimpleInterval, SimpleInterval> leftJustifyBreakpoints(final ChimericAlignment ca, final BreakpointComplications complication) {
 
-        final int homologyLen = complication.homologyForwardStrandRep.length();
+        final int homologyLen = complication.getHomologyForwardStrandRep().length();
 
         final String leftBreakpointRefContig, rightBreakpointRefContig;
         final int leftBreakpointCoord, rightBreakpointCoord;
-        if (!complication.dupSeqRepeatUnitRefSpan.equals(BreakpointComplications.DUPSEQ_REPEAT_UNIT_NA_VALUE)) { // todo : development artifact-- assuming tandem duplication is not co-existing with inversion
+        if (!complication.getDupSeqRepeatUnitRefSpan().equals(BreakpointComplications.DUPSEQ_REPEAT_UNIT_NA_VALUE)) { // todo : development artifact-- assuming tandem duplication is not co-existing with inversion
             leftBreakpointRefContig = rightBreakpointRefContig = ca.regionWithLowerCoordOnContig.referenceInterval.getContig();
             final SimpleInterval leftReferenceInterval, rightReferenceInterval;
             if (ca.isForwardStrandRepresentation) {
@@ -83,8 +83,8 @@ class NovelAdjacencyReferenceLocations {
                 leftReferenceInterval = ca.regionWithHigherCoordOnContig.referenceInterval;
                 rightReferenceInterval = ca.regionWithLowerCoordOnContig.referenceInterval;
             }
-            if (complication.dupSeqRepeatNumOnCtg > complication.dupSeqRepeatNumOnRef) {
-                leftBreakpointCoord = leftReferenceInterval.getEnd() - homologyLen - (complication.dupSeqRepeatNumOnCtg - complication.dupSeqRepeatNumOnRef)*complication.dupSeqRepeatUnitRefSpan.size();
+            if (complication.getDupSeqRepeatNumOnCtg() > complication.getDupSeqRepeatNumOnRef()) {
+                leftBreakpointCoord = leftReferenceInterval.getEnd() - homologyLen - (complication.getDupSeqRepeatNumOnCtg() - complication.getDupSeqRepeatNumOnRef())*complication.getDupSeqRepeatUnitRefSpan().size();
             } else {
                 leftBreakpointCoord = leftReferenceInterval.getEnd() - homologyLen;
             }

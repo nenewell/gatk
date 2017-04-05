@@ -82,12 +82,12 @@ abstract class SvType {
             super(getIDString(novelAdjacencyReferenceLocations),
                     Allele.create(SVConstants.CallingStepConstants.VCF_ALT_ALLELE_STRING_DEL),
                     -(novelAdjacencyReferenceLocations.leftJustifiedRightRefLoc.getStart() - novelAdjacencyReferenceLocations.leftJustifiedLeftRefLoc.getEnd()),
-                    novelAdjacencyReferenceLocations.complication.dupSeqRepeatUnitRefSpan.equals(BreakpointComplications.DUPSEQ_REPEAT_UNIT_NA_VALUE) ? Collections.EMPTY_MAP : Collections.singletonMap(SVConstants.CallingStepConstants.TANDUP_CONTRACTION_STRING, ""));
+                    novelAdjacencyReferenceLocations.complication.getDupSeqRepeatUnitRefSpan().equals(BreakpointComplications.DUPSEQ_REPEAT_UNIT_NA_VALUE) ? Collections.EMPTY_MAP : Collections.singletonMap(SVConstants.CallingStepConstants.TANDUP_CONTRACTION_STRING, ""));
         }
 
         private static String getIDString(final NovelAdjacencyReferenceLocations novelAdjacencyReferenceLocations) {
 
-            return  ((novelAdjacencyReferenceLocations.complication.dupSeqRepeatUnitRefSpan.equals(BreakpointComplications.DUPSEQ_REPEAT_UNIT_NA_VALUE)) ? TYPES.DEL.name() : TANDEMUPLICATION_CONTRACTION_ID_START_STRING)
+            return  ((novelAdjacencyReferenceLocations.complication.getDupSeqRepeatUnitRefSpan().equals(BreakpointComplications.DUPSEQ_REPEAT_UNIT_NA_VALUE)) ? TYPES.DEL.name() : TANDEMUPLICATION_CONTRACTION_ID_START_STRING)
                     + SVConstants.CallingStepConstants.VARIANT_ID_FIELD_SEPARATOR
                     + novelAdjacencyReferenceLocations.leftJustifiedLeftRefLoc.getContig() + SVConstants.CallingStepConstants.VARIANT_ID_FIELD_SEPARATOR
                     + novelAdjacencyReferenceLocations.leftJustifiedLeftRefLoc.getEnd() + SVConstants.CallingStepConstants.VARIANT_ID_FIELD_SEPARATOR
@@ -106,7 +106,7 @@ abstract class SvType {
         Insertion(final NovelAdjacencyReferenceLocations novelAdjacencyReferenceLocations) {
             super(getIDString(novelAdjacencyReferenceLocations),
                     Allele.create(SVConstants.CallingStepConstants.VCF_ALT_ALLELE_STRING_INS),
-                    novelAdjacencyReferenceLocations.complication.insertedSequenceForwardStrandRep.length(),
+                    novelAdjacencyReferenceLocations.complication.getInsertedSequenceForwardStrandRep().length(),
                     Collections.EMPTY_MAP);
         }
 
@@ -129,8 +129,8 @@ abstract class SvType {
         DuplicationTandem(final NovelAdjacencyReferenceLocations novelAdjacencyReferenceLocations) {
             super(getIDString(novelAdjacencyReferenceLocations),
                     Allele.create(SVConstants.CallingStepConstants.VCF_ALT_ALLELE_STRING_DUP),
-                    novelAdjacencyReferenceLocations.complication.insertedSequenceForwardStrandRep.length()
-                            + (novelAdjacencyReferenceLocations.complication.dupSeqRepeatNumOnCtg - novelAdjacencyReferenceLocations.complication.dupSeqRepeatNumOnRef)*novelAdjacencyReferenceLocations.complication.dupSeqRepeatUnitRefSpan.size(),
+                    novelAdjacencyReferenceLocations.complication.getInsertedSequenceForwardStrandRep().length()
+                            + (novelAdjacencyReferenceLocations.complication.getDupSeqRepeatNumOnCtg() - novelAdjacencyReferenceLocations.complication.getDupSeqRepeatNumOnRef())*novelAdjacencyReferenceLocations.complication.getDupSeqRepeatUnitRefSpan().size(),
                     Collections.singletonMap(SVConstants.CallingStepConstants.TANDUP_EXPANSION_STRING, ""));
         }
 

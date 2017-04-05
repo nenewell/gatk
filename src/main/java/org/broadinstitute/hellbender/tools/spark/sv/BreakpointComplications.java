@@ -35,13 +35,41 @@ final class BreakpointComplications {
     /**
      * '+' strand representations of micro-homology, inserted sequence and duplicated sequence on the reference.
      */
-    final String homologyForwardStrandRep;
-    final String insertedSequenceForwardStrandRep;
-    final SimpleInterval dupSeqRepeatUnitRefSpan;
-    final int dupSeqRepeatNumOnRef;
-    final int dupSeqRepeatNumOnCtg;
-    final List<String> cigarStringsForDupSeqOnCtg;
-    final boolean dupAnnotFromOptimization;
+    private String homologyForwardStrandRep;
+    private String insertedSequenceForwardStrandRep;
+    private SimpleInterval dupSeqRepeatUnitRefSpan;
+    private int dupSeqRepeatNumOnRef;
+    private int dupSeqRepeatNumOnCtg;
+    private List<String> cigarStringsForDupSeqOnCtg;
+    private boolean dupAnnotFromOptimization;
+
+    public String getHomologyForwardStrandRep() {
+        return homologyForwardStrandRep;
+    }
+
+    public String getInsertedSequenceForwardStrandRep() {
+        return insertedSequenceForwardStrandRep;
+    }
+
+    public SimpleInterval getDupSeqRepeatUnitRefSpan() {
+        return dupSeqRepeatUnitRefSpan;
+    }
+
+    public int getDupSeqRepeatNumOnRef() {
+        return dupSeqRepeatNumOnRef;
+    }
+
+    public int getDupSeqRepeatNumOnCtg() {
+        return dupSeqRepeatNumOnCtg;
+    }
+
+    public List<String> getCigarStringsForDupSeqOnCtg() {
+        return cigarStringsForDupSeqOnCtg;
+    }
+
+    public boolean isDupAnnotFromOptimization() {
+        return dupAnnotFromOptimization;
+    }
 
     static final SimpleInterval DUPSEQ_REPEAT_UNIT_NA_VALUE
             = new SimpleInterval("NA", Integer.MAX_VALUE, Integer.MAX_VALUE);
@@ -71,29 +99,43 @@ final class BreakpointComplications {
 
         if (chimericAlignment.strandSwitch!= ChimericAlignment.StrandSwitch.NO_SWITCH) { // the case involves an inversion
             // TODO: 12/5/16 duplication detection to be done for inversion alleles
-            homologyForwardStrandRep = getHomology(firstContigRegion, secondContigRegion, contigSeq);
-            insertedSequenceForwardStrandRep = getInsertedSequence(firstContigRegion, secondContigRegion, contigSeq);
-            dupSeqRepeatUnitRefSpan = DUPSEQ_REPEAT_UNIT_NA_VALUE;
-            dupSeqRepeatNumOnRef = dupSeqRepeatNumOnCtg = 0;
-            cigarStringsForDupSeqOnCtg = Collections.EMPTY_LIST;
-            dupAnnotFromOptimization = false;
+            initForSimpleInversion(firstContigRegion, secondContigRegion, contigSeq);
         } else if (isNotSimpleTranslocation) {
-            final BreakpointComplications proxy = getLocationComplicationForInsDel(chimericAlignment, leftReferenceInterval, rightReferenceInterval, contigSeq);
-            homologyForwardStrandRep = proxy.homologyForwardStrandRep;
-            insertedSequenceForwardStrandRep = proxy.insertedSequenceForwardStrandRep;
-            dupSeqRepeatUnitRefSpan = proxy.dupSeqRepeatUnitRefSpan;
-            dupSeqRepeatNumOnRef = proxy.dupSeqRepeatNumOnRef;
-            dupSeqRepeatNumOnCtg = proxy.dupSeqRepeatNumOnCtg;
-            cigarStringsForDupSeqOnCtg = proxy.cigarStringsForDupSeqOnCtg;
-            dupAnnotFromOptimization = proxy.dupAnnotFromOptimization;
+            initForInsDel(chimericAlignment, leftReferenceInterval, rightReferenceInterval, contigSeq);
         } else { // TODO: 12/5/16 simple translocation, don't tackle yet
-            homologyForwardStrandRep = UNHANDLED_CASE.homologyForwardStrandRep;
-            insertedSequenceForwardStrandRep = UNHANDLED_CASE.insertedSequenceForwardStrandRep;
-            dupSeqRepeatUnitRefSpan = UNHANDLED_CASE.dupSeqRepeatUnitRefSpan;
-            dupSeqRepeatNumOnRef = dupSeqRepeatNumOnCtg = UNHANDLED_CASE.dupSeqRepeatNumOnCtg;
-            cigarStringsForDupSeqOnCtg = UNHANDLED_CASE.cigarStringsForDupSeqOnCtg;
-            dupAnnotFromOptimization = UNHANDLED_CASE.dupAnnotFromOptimization;
+            initForUnhandledCases();
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void initForSimpleInversion(AlignmentRegion firstContigRegion, AlignmentRegion secondContigRegion, byte[] contigSeq) {
+        homologyForwardStrandRep = getHomology(firstContigRegion, secondContigRegion, contigSeq);
+        insertedSequenceForwardStrandRep = getInsertedSequence(firstContigRegion, secondContigRegion, contigSeq);
+        dupSeqRepeatUnitRefSpan = DUPSEQ_REPEAT_UNIT_NA_VALUE;
+        dupSeqRepeatNumOnRef = dupSeqRepeatNumOnCtg = 0;
+        cigarStringsForDupSeqOnCtg = Collections.EMPTY_LIST;
+        dupAnnotFromOptimization = false;
+    }
+
+    private void initForInsDel(ChimericAlignment chimericAlignment, SimpleInterval leftReferenceInterval, SimpleInterval rightReferenceInterval, byte[] contigSeq) {
+        final BreakpointComplications proxy = getLocationComplicationForInsDel(chimericAlignment, leftReferenceInterval, rightReferenceInterval, contigSeq);
+        homologyForwardStrandRep = proxy.homologyForwardStrandRep;
+        insertedSequenceForwardStrandRep = proxy.insertedSequenceForwardStrandRep;
+        dupSeqRepeatUnitRefSpan = proxy.dupSeqRepeatUnitRefSpan;
+        dupSeqRepeatNumOnRef = proxy.dupSeqRepeatNumOnRef;
+        dupSeqRepeatNumOnCtg = proxy.dupSeqRepeatNumOnCtg;
+        cigarStringsForDupSeqOnCtg = proxy.cigarStringsForDupSeqOnCtg;
+        dupAnnotFromOptimization = proxy.dupAnnotFromOptimization;
+    }
+
+
+    private void initForUnhandledCases() {
+        homologyForwardStrandRep = UNHANDLED_CASE.homologyForwardStrandRep;
+        insertedSequenceForwardStrandRep = UNHANDLED_CASE.insertedSequenceForwardStrandRep;
+        dupSeqRepeatUnitRefSpan = UNHANDLED_CASE.dupSeqRepeatUnitRefSpan;
+        dupSeqRepeatNumOnRef = dupSeqRepeatNumOnCtg = UNHANDLED_CASE.dupSeqRepeatNumOnCtg;
+        cigarStringsForDupSeqOnCtg = UNHANDLED_CASE.cigarStringsForDupSeqOnCtg;
+        dupAnnotFromOptimization = UNHANDLED_CASE.dupAnnotFromOptimization;
     }
 
     private static BreakpointComplications getLocationComplicationForInsDel(final ChimericAlignment chimericAlignment,
