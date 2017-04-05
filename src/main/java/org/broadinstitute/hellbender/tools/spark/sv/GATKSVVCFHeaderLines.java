@@ -31,7 +31,6 @@ public class GATKSVVCFHeaderLines {
     public static final String HOMOLOGY_LENGTH = "HOMOLOGY_LENGTH";
     public static final String INV33 = "INV33";
     public static final String INV55 = "INV55";
-//    public static final String DUPLICATED_SEQUENCE = "DUPLICATED_SEQUENCE";
     public static final String DUP_REPET_UNIT_REF_SPAN = "DUP_REPET_UNIT_REF_SPAN";
     public static final String DUP_ASM_CTG_CIGARS = "DUP_ASM_CTG_CIGARS";
     public static final String DUPLICATION_NUMBERS = "DUP_NUM";
@@ -60,7 +59,6 @@ public class GATKSVVCFHeaderLines {
         vcfHeaderLines.put(INV33, new VCFInfoHeaderLine(INV33, 0, VCFHeaderLineType.Flag, "Whether the event represents a 3' to 5' inversion"));
         vcfHeaderLines.put(INV55, new VCFInfoHeaderLine(INV55, 0, VCFHeaderLineType.Flag, "Whether the event represents a 5' to 3' inversion"));
 
-//        vcfHeaderLines.put(DUPLICATED_SEQUENCE, new VCFInfoHeaderLine(DUPLICATED_SEQUENCE, 1, VCFHeaderLineType.String, "Duplicated sequence on the reference or on the alternate allele"));
         vcfHeaderLines.put(DUP_REPET_UNIT_REF_SPAN, new VCFInfoHeaderLine(DUP_REPET_UNIT_REF_SPAN, 1, VCFHeaderLineType.String, "Reference span of the suspected repeated unit in a tandem duplication"));
         vcfHeaderLines.put(DUP_ASM_CTG_CIGARS, new VCFInfoHeaderLine(DUP_ASM_CTG_CIGARS, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String,
                 "CIGARs of the repeated sequence on the locally-assembled contigs when aligned to " + DUP_REPET_UNIT_REF_SPAN + " (currently only available for repeats when " + DUP_ANNOT_FROM_OPT + " is false)"));

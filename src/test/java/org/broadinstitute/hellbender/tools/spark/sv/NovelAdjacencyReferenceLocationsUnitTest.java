@@ -322,7 +322,6 @@ public class NovelAdjacencyReferenceLocationsUnitTest extends BaseTest{
 
         seeIfItWorks(breakpoints, FIVE_TO_THREE, new SimpleInterval("21", 100040, 100040), new SimpleInterval("21", 100050, 100050),
                 new SimpleInterval("21", 100041, 100050),
-                /*new String(SVCallerTestDataProvider.makeDummySequence(10, (byte)'C')), */
                 new String(SVCallerTestDataProvider.makeDummySequence(10, (byte)'C')), "",
                 2, 1, Collections.emptyList());
         Assert.assertEquals(breakpointsDetectedFromReverseStrand, breakpoints);
@@ -339,7 +338,6 @@ public class NovelAdjacencyReferenceLocationsUnitTest extends BaseTest{
 
         seeIfItWorks(breakpoints, FIVE_TO_THREE, new SimpleInterval("21", 100040, 100040), new SimpleInterval("21", 100040, 100040),
                 new SimpleInterval("21", 100041, 100050),
-                /*new String(SVCallerTestDataProvider.makeDummySequence(10, (byte)'C')),*/
                 "", "",
                 1, 2, Arrays.asList("10M", "10M"));
         Assert.assertEquals(breakpointsDetectedFromReverseStrand, breakpoints);
@@ -359,7 +357,6 @@ public class NovelAdjacencyReferenceLocationsUnitTest extends BaseTest{
 
         seeIfItWorks(breakpoints, FIVE_TO_THREE, new SimpleInterval("21", 25297163, 25297163), new SimpleInterval("21", 25297163, 25297163),
                 new SimpleInterval("21", 25297164,25297252),
-                /*new String(dup),*/
                 "", new String(insertedSeq),
                 1, 2, Arrays.asList("89M", "89M"));
         Assert.assertEquals(breakpointsDetectedFromReverseStrand, breakpoints);
@@ -383,7 +380,6 @@ public class NovelAdjacencyReferenceLocationsUnitTest extends BaseTest{
 
         Assert.assertTrue(StringUtils.getLevenshteinDistance(breakpoints.complication.homologyForwardStrandRep, pseudoHomology)<=2);
         Assert.assertTrue(breakpoints.complication.insertedSequenceForwardStrandRep.isEmpty());
-//        Assert.assertTrue(StringUtils.getLevenshteinDistance(breakpoints.complication.dupSeqForwardStrandRep, firstRepeat)<=2);
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatUnitRefSpan, new SimpleInterval("20", 312610, 312705));
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatNumOnRef, 1);
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatNumOnCtg, 2);
@@ -394,7 +390,6 @@ public class NovelAdjacencyReferenceLocationsUnitTest extends BaseTest{
         breakpoints = SVCallerTestDataProvider.forComplexTanDup_1to2_pseudoHom_minus._3();
         Assert.assertTrue(StringUtils.getLevenshteinDistance(breakpoints.complication.homologyForwardStrandRep, pseudoHomology)<=2);
         Assert.assertTrue(breakpoints.complication.insertedSequenceForwardStrandRep.isEmpty());
-//        Assert.assertTrue(StringUtils.getLevenshteinDistance(breakpoints.complication.dupSeqForwardStrandRep, firstRepeat)<=2);
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatUnitRefSpan, new SimpleInterval("20", 312610, 312705));
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatNumOnRef, 1);
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatNumOnCtg, 2);
@@ -406,7 +401,6 @@ public class NovelAdjacencyReferenceLocationsUnitTest extends BaseTest{
         breakpoints = SVCallerTestDataProvider.forComplexTanDup_2to1_pseudoHom_plus._3();
         Assert.assertTrue(StringUtils.getLevenshteinDistance(breakpoints.complication.homologyForwardStrandRep, firstRepeat+pseudoHomology)<=2);
         Assert.assertTrue(breakpoints.complication.insertedSequenceForwardStrandRep.isEmpty());
-//        Assert.assertTrue(StringUtils.getLevenshteinDistance(breakpoints.complication.dupSeqForwardStrandRep, firstRepeat)<=2);
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatUnitRefSpan, new SimpleInterval("20", 312610, 312705));
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatNumOnCtg, 1);
         Assert.assertEquals(breakpoints.leftJustifiedLeftRefLoc, new SimpleInterval("20", 312609, 312609));
@@ -416,7 +410,6 @@ public class NovelAdjacencyReferenceLocationsUnitTest extends BaseTest{
         breakpoints = SVCallerTestDataProvider.forComplexTanDup_2to1_pseudoHom_minus._3();
         Assert.assertTrue(StringUtils.getLevenshteinDistance(breakpoints.complication.homologyForwardStrandRep, firstRepeat+pseudoHomology)<=2);
         Assert.assertTrue(breakpoints.complication.insertedSequenceForwardStrandRep.isEmpty());
-//        Assert.assertTrue(StringUtils.getLevenshteinDistance(breakpoints.complication.dupSeqForwardStrandRep, firstRepeat)<=2);
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatUnitRefSpan, new SimpleInterval("20", 312610, 312705));
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatNumOnRef, 2);
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatNumOnCtg, 1);
@@ -428,7 +421,6 @@ public class NovelAdjacencyReferenceLocationsUnitTest extends BaseTest{
         breakpoints = SVCallerTestDataProvider.forComplexTanDup_3to2_noPseudoHom_plus._3();
         Assert.assertTrue(StringUtils.getLevenshteinDistance(breakpoints.complication.homologyForwardStrandRep, firstRepeat+secondRepeat)<=2);
         Assert.assertTrue(breakpoints.complication.insertedSequenceForwardStrandRep.isEmpty());
-//        Assert.assertTrue(StringUtils.getLevenshteinDistance(breakpoints.complication.dupSeqForwardStrandRep, firstRepeat)<=2);
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatUnitRefSpan, new SimpleInterval("20", 312610, 312705));
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatNumOnRef, 3);
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatNumOnCtg, 2);
@@ -439,7 +431,6 @@ public class NovelAdjacencyReferenceLocationsUnitTest extends BaseTest{
         breakpoints = SVCallerTestDataProvider.forComplexTanDup_3to2_noPseudoHom_minus._3();
         Assert.assertTrue(StringUtils.getLevenshteinDistance(breakpoints.complication.homologyForwardStrandRep, firstRepeat+secondRepeat)<=2);
         Assert.assertTrue(breakpoints.complication.insertedSequenceForwardStrandRep.isEmpty());
-//        Assert.assertTrue(StringUtils.getLevenshteinDistance(breakpoints.complication.dupSeqForwardStrandRep, firstRepeat)<=2);
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatUnitRefSpan, new SimpleInterval("20", 312610, 312705));
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatNumOnRef, 3);
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatNumOnCtg, 2);
@@ -451,7 +442,6 @@ public class NovelAdjacencyReferenceLocationsUnitTest extends BaseTest{
         breakpoints = SVCallerTestDataProvider.forComplexTanDup_2to3_noPseudoHom_plus._3();
         Assert.assertTrue(StringUtils.getLevenshteinDistance(breakpoints.complication.homologyForwardStrandRep, firstRepeat)<=2);
         Assert.assertTrue(breakpoints.complication.insertedSequenceForwardStrandRep.isEmpty());
-//        Assert.assertTrue(StringUtils.getLevenshteinDistance(breakpoints.complication.dupSeqForwardStrandRep, firstRepeat)<2);
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatUnitRefSpan, new SimpleInterval("20", 312610, 312705));
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatNumOnRef, 2);
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatNumOnCtg, 3);
@@ -462,7 +452,6 @@ public class NovelAdjacencyReferenceLocationsUnitTest extends BaseTest{
         breakpoints = SVCallerTestDataProvider.forComplexTanDup_2to3_noPseudoHom_minus._3();
         Assert.assertTrue(StringUtils.getLevenshteinDistance(breakpoints.complication.homologyForwardStrandRep, firstRepeat)<=2);
         Assert.assertTrue(breakpoints.complication.insertedSequenceForwardStrandRep.isEmpty());
-//        Assert.assertTrue(StringUtils.getLevenshteinDistance(breakpoints.complication.dupSeqForwardStrandRep, firstRepeat)<2);
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatUnitRefSpan, new SimpleInterval("20", 312610, 312705));
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatNumOnRef, 2);
         Assert.assertEquals(breakpoints.complication.dupSeqRepeatNumOnCtg, 3);

@@ -21,7 +21,6 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -51,9 +50,9 @@ class SVVCFWriter {
 
         logger.info("Discovered " + sortedVariantsList.size() + " variants.");
 
-        final Map<String, List<VariantContext>> x = sortedVariantsList.stream()
-                .collect(Collectors.groupingBy(vc -> (String)vc.getAttribute(GATKSVVCFHeaderLines.SVTYPE)));
-        x.entrySet().forEach(pair -> logger.info(pair.getValue().size() + " "+ pair.getKey() + "'s"));
+        sortedVariantsList.stream()
+                .collect(Collectors.groupingBy(vc -> (String)vc.getAttribute(GATKSVVCFHeaderLines.SVTYPE)))
+                .entrySet().forEach(pair -> logger.info(pair.getValue().size() + " "+ pair.getKey() + "'s"));
     }
 
     // TODO: right now there's an edge case that the "same" inversion events would be called three times on a test sample such that they have the same start, end and inversion evidence type

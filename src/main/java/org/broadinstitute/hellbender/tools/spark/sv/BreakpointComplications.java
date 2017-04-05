@@ -196,14 +196,6 @@ final class BreakpointComplications {
 
             final TandemRepeatComplication duplicationComplication = new TandemRepeatComplication(distBetweenAlignRegionsOnRef, distBetweenAlignRegionsOnCtg);
 
-//            final byte[] dupSeq;
-//            if (chimericAlignment.isForwardStrandRepresentation){
-//                dupSeq = Arrays.copyOfRange(contigSeq, c2b-1, c2b+duplicationComplication.repeatedSeqLen-1);
-//            } else {
-//                dupSeq = Arrays.copyOfRange(contigSeq, c2b+duplicationComplication.pseudoHomologyLen -1, c2b+duplicationComplication.pseudoHomologyLen +duplicationComplication.repeatedSeqLen-1);
-//                SequenceUtil.reverseComplement(dupSeq);
-//            }
-
             final boolean isExpansion = distBetweenAlignRegionsOnRef<distBetweenAlignRegionsOnCtg;
 
             final int repeatUnitSpanStart = r1e - duplicationComplication.pseudoHomologyLen - duplicationComplication.repeatedSeqLen*duplicationComplication.lowerRepeatNumberEstimate + 1;
@@ -285,7 +277,6 @@ final class BreakpointComplications {
                                 result.add(new CigarElement(r1e - (refEnd-refBasesConsumed), CigarOperator.M));
                             } else {
                                 result.add(new CigarElement(cigarElement.getLength()-(r2b-(refEnd-refBasesConsumed))+1, CigarOperator.M));
-//                                result.add(new CigarElement(refBasesConsumed - (refEnd - r1e), CigarOperator.M));
                                 break;
                             }
                             initiatedCollection = true;
@@ -371,7 +362,7 @@ final class BreakpointComplications {
         @VisibleForTesting
         TandemRepeatComplication(final int distBetweenAlignRegionsOnRef, final int distBetweenAlignRegionsOnCtg) {
             // the reference system with a shorter overlap (i.e. with less-negative distance between regions) has a higher repeat number
-            final boolean isExpansion = distBetweenAlignRegionsOnRef<distBetweenAlignRegionsOnCtg;
+            final boolean isExpansion = distBetweenAlignRegionsOnRef < distBetweenAlignRegionsOnCtg;
             final int overlapOnLowerCNSequence, overlapOnHigherCNSequence;
             if (isExpansion) {
                 overlapOnLowerCNSequence = Math.abs(distBetweenAlignRegionsOnRef);

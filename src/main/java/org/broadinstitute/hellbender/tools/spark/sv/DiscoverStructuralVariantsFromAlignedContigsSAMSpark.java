@@ -1,25 +1,21 @@
 package org.broadinstitute.hellbender.tools.spark.sv;
 
-import com.google.cloud.dataflow.sdk.options.PipelineOptions;
-import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.variant.variantcontext.VariantContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.hellbender.cmdline.programgroups.SparkProgramGroup;
 import org.broadinstitute.hellbender.engine.datasources.ReferenceMultiSource;
-import org.broadinstitute.hellbender.engine.datasources.ReferenceWindowFunctions;
 import org.broadinstitute.hellbender.engine.filters.ReadFilter;
 import org.broadinstitute.hellbender.engine.filters.ReadFilterLibrary;
 import org.broadinstitute.hellbender.engine.spark.GATKSparkTool;
 import org.broadinstitute.hellbender.utils.read.GATKRead;
 import scala.Tuple2;
-
-import static org.broadinstitute.hellbender.tools.spark.sv.DiscoverStructuralVariantsFromAlignedContigsSpark.*;
 
 /**
  * This tool takes a SAM file containing the alignments of assembled contigs or long reads to the reference
@@ -65,17 +61,16 @@ public final class DiscoverStructuralVariantsFromAlignedContigsSAMSpark extends 
     @Override
     protected void runTool(final JavaSparkContext ctx) {
 
-        final JavaRDD<Iterable<GATKRead>> alignmentsGroupedByName = getReads().groupBy(GATKRead::getName).map(Tuple2::_2);
-        final JavaPairRDD<Iterable<AlignmentRegion>, byte[]> alignmentRegionsIterable = alignmentsGroupedByName.mapToPair(AssemblyAlignmentParser::convertToAlignmentRegions);
+        final JavaPairRDD<Iterable<AlignmentRegion>, byte[]> alignmentRegionsIterable
+                = getReads().groupBy(GATKRead::getName).map(Tuple2::_2).mapToPair(AssemblyAlignmentParser::convertToAlignmentRegions);
 
-        final Integer minAlignLengthFinal = minAlignLength;
+        final Broadcast<ReferenceMultiSource> broadcastReference = ctx.broadcast(getReference());
 
-        final PipelineOptions pipelineOptions = getAuthenticatedGCSOptions();
-        final SAMSequenceDictionary referenceSequenceDictionary = new ReferenceMultiSource(pipelineOptions, fastaReference, ReferenceWindowFunctions.IDENTITY_FUNCTION).getReferenceSequenceDictionary(null);
+        final JavaRDD<VariantContext> variants
+                = SVVariantConsensusDiscovery.discoverNovelAdjacencyFromChimericAlignments(alignmentRegionsIterable, log)
+                .map(tuple2 -> SVVariantConsensusDiscovery.discoverVariantsFromConsensus(tuple2, broadcastReference));
 
-        final JavaRDD<VariantContext> variants = callVariantsFromAlignmentRegions(ctx.broadcast(getReference()), alignmentRegionsIterable, LogManager.getLogger(DiscoverStructuralVariantsFromAlignedContigsSAMSpark.class));
-
-        SVVCFWriter.writeVCF(pipelineOptions, outputPath, SVConstants.CallingStepConstants.CURRENTLY_CAPABLE_VARIANTS_VCF, fastaReference, variants, log);
+        SVVCFWriter.writeVCF(getAuthenticatedGCSOptions(), outputPath, SVConstants.CallingStepConstants.CURRENTLY_CAPABLE_VARIANTS_VCF, fastaReference, variants, log);
     }
 
 }

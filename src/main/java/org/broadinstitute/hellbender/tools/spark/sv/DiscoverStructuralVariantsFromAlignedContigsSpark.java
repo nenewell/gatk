@@ -1,6 +1,5 @@
 package org.broadinstitute.hellbender.tools.spark.sv;
 
-import com.google.common.collect.Iterables;
 import htsjdk.variant.variantcontext.VariantContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,7 +12,6 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.hellbender.cmdline.programgroups.StructuralVariationSparkProgramGroup;
 import org.broadinstitute.hellbender.engine.datasources.ReferenceMultiSource;
 import org.broadinstitute.hellbender.engine.spark.GATKSparkTool;
-import scala.Tuple2;
 
 @CommandLineProgramProperties(summary="Filter breakpoint alignments and call variants.",
         oneLineSummary="Filter breakpoint alignments and call variants",
@@ -57,32 +55,13 @@ public final class DiscoverStructuralVariantsFromAlignedContigsSpark extends GAT
         final JavaPairRDD<Iterable<AlignmentRegion>, byte[]> alignmentRegionsWithContigSequences
                 = AssemblyAlignmentParser.prepAlignmentRegionsForCalling(ctx, inputAlignments, inputAssemblies).cache();
 
+        final Broadcast<ReferenceMultiSource> broadcastReference = ctx.broadcast(getReference());
+
         final JavaRDD<VariantContext> variants
-                = callVariantsFromAlignmentRegions(ctx.broadcast(getReference()), alignmentRegionsWithContigSequences, log).cache();
+                = SVVariantConsensusDiscovery.discoverNovelAdjacencyFromChimericAlignments(alignmentRegionsWithContigSequences, log)
+                .map(tuple2 -> SVVariantConsensusDiscovery.discoverVariantsFromConsensus(tuple2, broadcastReference));
 
         SVVCFWriter.writeVCF(getAuthenticatedGCSOptions(), outputPath, outputName, fastaReference, variants, log);
     }
 
-    /**
-     * This method processes an RDD containing alignment regions, scanning for chimeric alignments which match a set of filtering
-     * criteria, and emitting a list of VariantContexts representing SVs for split alignments that pass.
-     *
-     * The input RDD is of the form:
-     * Tuple2 of:
-     *     {@code Iterable<AlignmentRegion>} AlignmentRegion objects representing all alignments for one contig
-     *     A byte array with the sequence content of the contig
-     * @param broadcastReference The broadcast handle to the reference (used to populate reference bases)
-     * @param alignmentRegionsWithContigSequence A data structure as described above, where a list of AlignmentRegions and the sequence of the contig are keyed by a tuple of Assembly ID and Contig ID
-     * @param logger
-     */
-    static JavaRDD<VariantContext> callVariantsFromAlignmentRegions(final Broadcast<ReferenceMultiSource> broadcastReference,
-                                                                    final JavaPairRDD<Iterable<AlignmentRegion>, byte[]> alignmentRegionsWithContigSequence,
-                                                                    final Logger logger) {
-
-        return alignmentRegionsWithContigSequence.filter(pair -> Iterables.size(pair._1())>1) // filter out any contigs that has less than two alignment records
-                .flatMap( input -> ChimericAlignment.fromSplitAlignments(input).iterator())                                 // 1. AR -> {CA}
-                .mapToPair(ca -> new Tuple2<>(new NovelAdjacencyReferenceLocations(ca), ca))                                // 2. CA -> BP
-                .groupByKey()                                                                                               // 3. {consensus BP}
-                .map(tuple2 -> SVVariantConsensusCall.discoverVariantsFromConsensus(tuple2, broadcastReference));               // BP annotated with list of CA's
-    }
 }

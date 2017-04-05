@@ -1,11 +1,14 @@
 package org.broadinstitute.hellbender.tools.spark.sv;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Iterables;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.vcf.VCFConstants;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.broadcast.Broadcast;
 import org.broadinstitute.hellbender.engine.datasources.ReferenceMultiSource;
 import org.broadinstitute.hellbender.exceptions.GATKException;
@@ -25,12 +28,33 @@ import static org.broadinstitute.hellbender.tools.spark.sv.NovelAdjacencyReferen
  * Given identified pair of breakpoints for a simple SV and its supportive evidence, i.e. chimeric alignments,
  * produce an VariantContext.
  */
-class SVVariantConsensusCall implements Serializable {
+class SVVariantConsensusDiscovery implements Serializable {
     private static final long serialVersionUID = 1L;
+
+    /**
+     * This method processes an RDD containing alignment regions, scanning for chimeric alignments which match a set of filtering
+     * criteria, and emitting novel adjacency not present on the reference used for aligning the contigs.
+     *
+     * The input RDD is of the form:
+     * Tuple2 of:
+     *     {@code Iterable<AlignmentRegion>} AlignmentRegion objects representing all alignments for one contig
+     *     A byte array with the sequence content of the contig
+     * @param alignmentRegionsWithContigSequence A data structure as described above, where a list of AlignmentRegions and the sequence of the contig are keyed by a tuple of Assembly ID and Contig ID
+     * @param logger                             for logging information and accredit to the calling tool
+     */
+    static JavaPairRDD<NovelAdjacencyReferenceLocations, Iterable<ChimericAlignment>> discoverNovelAdjacencyFromChimericAlignments(
+            final JavaPairRDD<Iterable<AlignmentRegion>, byte[]> alignmentRegionsWithContigSequence,
+            final Logger logger)
+    {
+        return alignmentRegionsWithContigSequence.filter(pair -> Iterables.size(pair._1())>1) // filter out any contigs that has less than two alignment records
+                .flatMap( input -> ChimericAlignment.fromSplitAlignments(input).iterator())              // 1. AR -> {CA}
+                .mapToPair(ca -> new Tuple2<>(new NovelAdjacencyReferenceLocations(ca), ca))             // 2. CA -> NovelAdjacency
+                .groupByKey();                                                                           // 3. {consensus NovelAdjacency}
+    }
 
     // TODO: 12/12/16 does not handle translocation yet
     /**
-     * Third step in calling variants: produce a VC from a {@link NovelAdjacencyReferenceLocations} (consensus among different assemblies if they all point to the same breakpoint).
+     * Produces a VC from a {@link NovelAdjacencyReferenceLocations} (consensus among different assemblies if they all point to the same breakpoint).
      *
      * @param breakpointPairAndItsEvidence      consensus among different assemblies if they all point to the same breakpoint
      * @param broadcastReference                broadcasted reference
@@ -130,7 +154,7 @@ class SVVariantConsensusCall implements Serializable {
 
         // developer check to make sure new types are treated correctly
         try {
-            final SvType.TYPES x = SvType.TYPES.valueOf(type.toString());
+            SvType.TYPES.valueOf(type.toString());
         } catch (final IllegalArgumentException ex) {
             throw new GATKException.ShouldNeverReachHereException("Inferred type is not known yet: " + type.toString(), ex);
         }
@@ -155,7 +179,6 @@ class SVVariantConsensusCall implements Serializable {
         }
 
         if (!(novelAdjacencyReferenceLocations.complication.dupSeqRepeatUnitRefSpan.equals(BreakpointComplications.DUPSEQ_REPEAT_UNIT_NA_VALUE))) {
-//            attributeMap.put(GATKSVVCFHeaderLines.DUPLICATED_SEQUENCE, novelAdjacencyReferenceLocations.complication.dupSeqForwardStrandRep);
             attributeMap.put(GATKSVVCFHeaderLines.DUP_REPET_UNIT_REF_SPAN, novelAdjacencyReferenceLocations.complication.dupSeqRepeatUnitRefSpan.toString());
             if(!novelAdjacencyReferenceLocations.complication.cigarStringsForDupSeqOnCtg.isEmpty()) {
                 attributeMap.put(GATKSVVCFHeaderLines.DUP_ASM_CTG_CIGARS, StringUtils.join(novelAdjacencyReferenceLocations.complication.cigarStringsForDupSeqOnCtg, VCFConstants.INFO_FIELD_ARRAY_SEPARATOR));

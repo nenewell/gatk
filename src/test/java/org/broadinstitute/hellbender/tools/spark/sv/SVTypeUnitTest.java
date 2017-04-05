@@ -29,8 +29,8 @@ public class SVTypeUnitTest {
                                final int expectedSvLen,
                                final String expectedFirstFieldInIdString) throws IOException {
 
-        final SvType SvType = SVVariantConsensusCall.getType(novelAdjacencyReferenceLocations);
-        final List<Allele> producedAlleles = SVVariantConsensusCall.produceAlleles(novelAdjacencyReferenceLocations, SVCallerTestDataProvider.reference, SvType);
+        final SvType SvType = SVVariantConsensusDiscovery.getType(novelAdjacencyReferenceLocations);
+        final List<Allele> producedAlleles = SVVariantConsensusDiscovery.produceAlleles(novelAdjacencyReferenceLocations, SVCallerTestDataProvider.reference, SvType);
 
         Assert.assertEquals(producedAlleles.size(), 2);
         Assert.assertTrue(producedAlleles.get(0).isReference() && producedAlleles.get(1).isNonReference());
